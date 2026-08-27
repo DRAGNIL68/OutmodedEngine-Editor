@@ -1,11 +1,10 @@
 'use strict';
 
-(function() {
-    let my_action;
+// rollup src/main.js -o bundle.js -f cjs
 
     new ModelFormat({
         id: 'my_custom_type',
-        name: 'My Custom Type',
+        name: 'Outmoded Model',
         description: 'A brand new custom model type for Blockbench',
         icon: 'star', // Material Icon or custom SVG
         category: 'minecraft',
@@ -23,6 +22,10 @@
             // Code to serialize model data into your custom file format
         }
     });
+
+(function() {
+    let my_action;
+
 
     BBPlugin.register('bundle', {
         title: 'OutmodedEngine Editor',
