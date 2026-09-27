@@ -1,14 +1,14 @@
 // rollup src/main.js -o bundle.js -f cjs
 
-    export const customFormat = new ModelFormat({
-        id: 'my_custom_type',
+    export const customFormat = new ModelFormat("outmoded_template", {
+        id: 'outmoded_template',
         name: 'Outmoded Template',
         description: 'Model Templates for OutmodedEngine',
         icon: 'star', // Material Icon or custom SVG
         category: 'papermc',
         target: 'OutmodedEngine/Animated-Skript',
 
-
+    
         animated_textures: true,
         animation_files: true,
         texture_mcmeta: true, // "Enable mcmeta files for animated texture files" i would imagine this generates mcmeta files?
@@ -23,7 +23,7 @@
         java_face_properties: true,
         locators: true,
         meshes: false,
-        model_identifier: false,
+        model_identifier: false, // this needs turing on at some point 
         optional_box_uv: true,
         paint_mode: true,
         parent_model_id: false,
@@ -41,10 +41,8 @@
         java_cube_shading_properties: true, // Enables properties for Minecraft Java block/item models related to block shading (shading option and light emission value)
         box_uv_float_size: false, // If true, cube sizes will not be floored to calculate UV sizes with box UV. This can result in UVs not aligning with pixel edges
         cullfaces: true, // Enables cullfaces, the ability on faces in Minecraft block models to set a direction, that, if covered by another block, will cause the face to unrender
-
-        splines: true,
-        
-        
-
-        
+        rotation_snap: false
     });
+    
+
+    

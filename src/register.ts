@@ -1,66 +1,65 @@
-import { customFormat } from "./ModelFormat.js";
+import { customFormat } from "./format/ModelFormat.js";
 
+import { finishEdit } from "./features/Hitbox.ts";
+import { initEdit } from "./features/Hitbox.ts";
+import { updateSelection } from "./features/Hitbox.ts";
+import clearHitboxCache from "./features/Hitbox.ts"
 
-import { initEdit } from "./hitbox.ts";
-import { updateSelection } from "./hitbox.ts";
+import { exportCodec } from "./format/Codecs.ts";
 
 
 (function() {
-    let button: Action;
 
+    let action1 = new Action("export_outmoded_template", {
+        name: "Export Outmoded Template",
+        icon: "archive",
+        description: "Export this model as a template",
+        category: "file",
+        condition: () => Format.id === 'outmoded_template',
+        click: function () {
+            exportCodec.export();
+        },
+    })
+    MenuBar.addAction(action1,'file.export');
 
+    
     BBPlugin.register('bundle', {
         title: 'OutmodedEngine Editor',
         author: 'DRAGNIL68',
-        description: 'Adds powerful tools for the OutmodedEngine and its many additions',
-        icon: 'star', // Uses Blockbench icon strings or material icons
-        version: '1.0.1',
+        description: 'powerful tools for the OutmodedEngine',
+        icon: 'star', 
+        version: '1.0.0',
         variant: 'desktop', // Options: 'desktop', 'web', or 'both'
         min_version: '5.0.0',
         tags: ['Minecraft', 'OutmodedEngine'], // Max 3 tags
 
         onload() {
-
             console.log("frog");
 
             Language.addTranslations('en', {
-                'format_category.papermc': 'PaperMC'
+                'format_category.papermc': 'PaperMC',
+                'dialog.project.geoname': 'Namespaced Id'
             });
 
-            button = new Action('randomize_height', {
-                name: 'Randomize Height',
-                description: 'Randomize the height of all selected elements',
-                icon: 'bar_chart',
-
-                click: function() {
-                    Undo.initEdit({elements: Cube.selected});
-                    Cube.selected.forEach(cube => {
-                        cube.to[1] = cube.from[0] + Math.floor(Math.random()*8);
-                    });
-                    Canvas.updateView({
-                        elements: Cube.selected,
-                        element_aspects: {geometry: true},
-                        selection: true
-                    });
-                    Undo.finishEdit('Randomize cube height');
-                }
-            });
-
-
-
-            Blockbench.on('init_edit', initEdit);
-
+            Blockbench.on('init_edit', initEdit)
+            Blockbench.on('finish_edit', finishEdit) // this does the same thing
             Blockbench.on('update_selection', updateSelection)
 
-            MenuBar.menus.tools.addAction(button);
+            //let prop = new Property(OutlinerElement, "string", "frog", {exposed: true, default: "frog", options: {}})
+    
+            new Property(ModelProject, "string", "namespacedId", {exposed: true, default: "frog", label: "frog1"})
+
+            clearHitboxCache(); 
         },
+
 
         onunload() {
             // Cleans up memory and UI when disabled
-            button.delete();
             console.log("My Plugin unloaded.");
-            Blockbench.removeListener('init_edit', initEdit)
-            Blockbench.removeListener('update_selection', updateSelection)
+
+            Blockbench.removeListener('init_edit', initEdit);
+            Blockbench.removeListener('finish_edit', finishEdit);
+            Blockbench.removeListener('update_selection', updateSelection);
         }
     }); 
 })();
