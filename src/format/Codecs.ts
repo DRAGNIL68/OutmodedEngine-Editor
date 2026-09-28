@@ -1,6 +1,6 @@
 
     import { CodecUtils } from "../tools/CodecUtils";
-
+    import { VariantTools } from "../tools/VariantTools"
     export const exportCodec = new Codec('outmoded_template_codec', {
         name: 'Outmoded Template',
         extension: 'json',
@@ -64,15 +64,16 @@
 
             let data = {
                 options: {
+
                     namespacedId: "n/a",
+                    credit: "insert model credit", // from filed in bb
                     user_properties: {} // another place to put data
                 },
 
-                textures: Object.fromEntries(CodecUtils.getAllTexturesBase64()),
+                textures: Object.fromEntries(VariantTools.getAllTexturesBase64()),
                 structure: Object.fromEntries(nodeStructure),
                 animations: "data",
-                texture_variants: Object.fromEntries(variants),
-                resource_pack: Object.fromEntries(CodecUtils.generateResourcePack())
+                texture_variants: VariantTools.generateVariantData("default", {}),
             }
 
             return JSON.stringify(data, null, 4);

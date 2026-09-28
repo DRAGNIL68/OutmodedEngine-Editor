@@ -147,26 +147,75 @@ const CodecUtils = class CodecUtils {
         });
         return cubeMap;
     }
-    static generateResourcePack() {
-        console.log("1");
+};
+
+// i need to add interfaces so this code does not become unreadable
+const VariantTools = class VariantTools {
+    static generateVariantData(variantId, textureMap) {
+        let variant = {
+            name: variantId, // name/id of variant
+            textureMap: textureMap, // stores what textures map to what
+            rp_data: {}
+        };
         let groupCubeMap = CodecUtils.groupFlatten();
         let resourceMap = new Map();
-        let textureMap = new Map();
-        console.log("2");
         groupCubeMap.forEach((cubes, key) => {
-            console.log("3-loop");
+            resourceMap.set(key, VariantTools.generateGroupFile(cubes)); // maps group uuid as file name to model data
+        });
+        variant.rp_data = Object.fromEntries(resourceMap);
+        return variant;
+    }
+    static generateGroupFile(cubes) {
+        let textureMap = new Map(); // id : texture name
+        let file = {
+            format_version: "1.21.11",
+            texture_size: [-1, -1],
+            textures: {}, // map
+            elements: [] // I think this is bad
+        };
+        cubes.forEach(cube => {
+            if (cube == null) {
+                return;
+            }
+            let faces = new Map();
+            for (const [face, data] of Object.entries(cube.faces)) {
+                let txt = data.getTexture();
+                if (txt instanceof Texture) {
+                    textureMap.set(txt.id, txt.name);
+                    faces.set(face, {
+                        uv: data.uv,
+                        texture: "#" + txt.id
+                    });
+                }
+            }
+            let cubeData = {
+                from: [cube.from[0], cube.from[1], cube.from[2]],
+                to: [cube.to[0], cube.to[1], cube.to[2]],
+                rotation: { "x": cube.rotation[0], "y": cube.rotation[1], "z": cube.rotation[2], "origin": [cube.origin[0], cube.origin[1], cube.origin[2]] },
+                faces: Object.fromEntries(faces)
+            };
+            file.textures = Object.fromEntries(textureMap);
+            file.elements.push(cubeData);
+        });
+        return file;
+    }
+    static generateResourcePack() {
+        let groupCubeMap = CodecUtils.groupFlatten();
+        let resourceMap = new Map();
+        let textureMap = new Map(); // id : texture name
+        groupCubeMap.forEach((cubes, key) => {
             let file = {
                 format_version: "1.21.11",
-                credit: "Made with Blockbench for OutmodedEngine",
                 texture_size: [-1, -1],
                 textures: {}, // map
-                elements: [] // i think this is bad
+                data: {
+                    elements: [] // I think this is bad
+                }
             };
             cubes.forEach(cube => {
                 if (cube == null) {
                     return;
                 }
-                console.log("4-loop");
                 let faces = new Map();
                 for (const [face, data] of Object.entries(cube.faces)) {
                     let txt = data.getTexture();
@@ -181,11 +230,11 @@ const CodecUtils = class CodecUtils {
                 let cubeData = {
                     from: [cube.from[0], cube.from[1], cube.from[2]],
                     to: [cube.to[0], cube.to[1], cube.to[2]],
-                    //rotation: {"x": 1, "y": 1, "z": 1, "origin": [1, 1, 1]},
                     rotation: { "x": cube.rotation[0], "y": cube.rotation[1], "z": cube.rotation[2], "origin": [cube.origin[0], cube.origin[1], cube.origin[2]] },
                     faces: Object.fromEntries(faces)
                 };
-                file.elements.push(cubeData);
+                file.textures = Object.fromEntries(textureMap);
+                file.data.elements.push(cubeData);
             });
             resourceMap.set(key, file); // maps group uuid as file name to model data
         });
@@ -194,14 +243,9 @@ const CodecUtils = class CodecUtils {
     static getAllTexturesBase64() {
         let result = new Map();
         Texture.all.forEach((texture) => {
-            result.set(texture.uuid, texture.getBase64());
+            result.set(texture.name, texture.getBase64());
         });
         return result;
-    }
-    // this public maps groups to their textures
-    static mapGroupTextures() {
-        Group.all.forEach(cube => {
-        });
     }
 };
 
@@ -254,13 +298,13 @@ const exportCodec = new Codec('outmoded_template_codec', {
         let data = {
             options: {
                 namespacedId: "n/a",
+                credit: "insert model credit", // from filed in bb
                 user_properties: {} // another place to put data
             },
-            textures: Object.fromEntries(CodecUtils.getAllTexturesBase64()),
+            textures: Object.fromEntries(VariantTools.getAllTexturesBase64()),
             structure: Object.fromEntries(nodeStructure),
             animations: "data",
-            texture_variants: Object.fromEntries(variants),
-            resource_pack: Object.fromEntries(CodecUtils.generateResourcePack())
+            texture_variants: VariantTools.generateVariantData("default", "no map"),
         };
         return JSON.stringify(data, null, 4);
     }

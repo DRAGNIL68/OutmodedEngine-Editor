@@ -47,7 +47,7 @@ import { exportCodec } from "./format/Codecs.ts";
 
             //let prop = new Property(OutlinerElement, "string", "frog", {exposed: true, default: "frog", options: {}})
     
-            new Property(ModelProject, "string", "namespacedId", {exposed: true, default: "frog", label: "frog1"})
+            new Property(ModelProject, "string", "namespacedId", {exposed: true, default: "credit", label: "Made with BlockBench for the OutmodedEngine"})
 
             clearHitboxCache(); 
         },
