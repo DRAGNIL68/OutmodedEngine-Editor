@@ -44,10 +44,6 @@ new ModelFormat("outmoded_template", {
 });
 
 const cubeCache = new Map();
-function clearHitboxCache() {
-    cubeCache.clear();
-    runLock = false;
-}
 function updateCache() {
     console.log("Update Cache");
     cubeCache.clear();
@@ -151,6 +147,7 @@ const CodecUtils = class CodecUtils {
 
 // i need to add interfaces so this code does not become unreadable
 const VariantTools = class VariantTools {
+    static namespace = "outmoded_engine";
     static generateVariantData(variantId, textureMap) {
         let variant = {
             name: variantId, // name/id of variant
@@ -181,7 +178,7 @@ const VariantTools = class VariantTools {
             for (const [face, data] of Object.entries(cube.faces)) {
                 let txt = data.getTexture();
                 if (txt instanceof Texture) {
-                    textureMap.set(txt.id, txt.name);
+                    textureMap.set(txt.id, VariantTools.namespace + ":" + txt.name);
                     faces.set(face, {
                         uv: data.uv,
                         texture: "#" + txt.id
@@ -295,20 +292,189 @@ const exportCodec = new Codec('outmoded_template_codec', {
             textures: {}, // stores the uuids of the textures used
             excluded_nodes: {} // stores nodes that will not get updated
         });
+        console.log("credit", Project.credit);
+        console.log("namesapcedid", Project.namespacedId);
         let data = {
             options: {
-                namespacedId: "n/a",
-                credit: "insert model credit", // from filed in bb
+                namespacedId: Project.namespacedId,
+                credit: Project.credit,
                 user_properties: {} // another place to put data
             },
             textures: Object.fromEntries(VariantTools.getAllTexturesBase64()),
             structure: Object.fromEntries(nodeStructure),
             animations: "data",
-            texture_variants: VariantTools.generateVariantData("default", "no map"),
+            texture_variants: VariantTools.generateVariantData("default", {}),
         };
+        console.log("test", Project.uuid);
         return JSON.stringify(data, null, 4);
     }
 });
+
+class VariantManager {
+    static variantNum = 0;
+    static variantHolderMap = new Map();
+    static bindEvents() {
+        console.log("binding events");
+        Blockbench.on('save_project', (data) => {
+            Project.uuid;
+            console.log("bind save project");
+        });
+        Blockbench.on('load_project', (data) => {
+            Project.uuid;
+            console.log("bind load project");
+        });
+    }
+    static loadVariantHolder(project, json) {
+        this.variantHolderMap.set(project, new VariantHolder("uuid"));
+    }
+    static removeVariantHolder(project) {
+        this.variantHolderMap.delete(project);
+    }
+    /**
+     * uses the current open project
+     * @returns VariantHolder | undefined
+     */
+    static getVariantHolder() {
+        let uuid = Project.uuid;
+        if (Project.format === undefined)
+            return undefined; // this happens when there is no project (main menu)
+        // checks if its the correct format (outmoded_template)
+        if (Project.format.id !== "outmoded_template") {
+            return undefined;
+        }
+        // creates the variant holder for the current project
+        if (!this.variantHolderMap.has(uuid)) {
+            this.variantHolderMap.set(uuid, new VariantHolder(uuid));
+        }
+        return this.variantHolderMap.get(uuid);
+    }
+}
+// no this entire file is terrible
+class VariantHolder {
+    project;
+    variantNum = 0;
+    variantMap = new Map();
+    constructor(project) {
+        this.project = project;
+    }
+    getProject() { return this.project; }
+    toJson() {
+        return "";
+    }
+    fromJson(json) {
+    }
+}
+class Variant {
+    // name is id in map
+    textureMap = new Map(); // texture.name : texture.name
+    excludedGroupMap = new Set;
+    getTextureMap() {
+        return this.textureMap;
+    }
+    getExcludedGroupMap() {
+        return this.excludedGroupMap;
+    }
+}
+
+//TODO: the most of the css and html is written with ai
+// i am sorry but i am no web dev
+// yes the typescript is human code
+class VariantPanel {
+    rebuildPanel() {
+        $('.button-panel').empty(); // clear all elements
+        let variantHolder = VariantManager.getVariantHolder();
+        if (variantHolder === undefined)
+            return; // this should never happen
+        let panel = $('.button-panel');
+        variantHolder.variantMap.forEach((data, key) => {
+            panel.append(`<div style="margin-top: 5px; margin-bottom: 5px; display: flex; flex-direction: row; height: 30px; border-style: solid; border-width: thin; background-color: black; align-items: center; ">
+                        <h1 style="font-size: 15px; margin: 0; padding-left: 8px;">${key}</h1>
+                        <i class="icon material-icons" style="color: #ffcc00;">star</i>
+                        <button class="variant_edit"; id="${key}"; style="margin-left: auto !important; margin-right: 0 !important; font-size: 15px; background: none; border: none; font-family: inherit; color: inherit; cursor: pointer; outline: none; padding: 0; height: 100%;display: inline-flex; align-items: center; justify-content: center;">edit</button>
+                        <button class="variant_delete"; id="${key}"
+                            style=" margin-right: 0 !important; font-size: 15px; background: none; border: none; font-family: inherit; color: inherit; cursor: pointer; outline: none; padding: 0; height: 100%; display: inline-flex; align-items: center; justify-content: center;"
+                            onmouseover="document.getElementById('icon_${key}').style.color='#d3d3d3'"
+                            onmouseout="document.getElementById('icon_${key}').style.color='#808080'">
+                            <i id="icon_${key}" class="icon material-icons" style="transition: color 0.2s; color: #808080">delete</i>
+                        </button>
+                    </div>`);
+        });
+    }
+    register() {
+        const frog = document.getElementById("variant-panel");
+        const fucck1 = document.createElement("h1");
+        frog?.append(fucck1);
+        const myCustomPanel = new Panel('texture_variants', {
+            name: 'Texture Variants',
+            icon: 'fa-project-diagram',
+            condition: () => Format.id === "outmoded_template",
+            menu: [
+                new Action('panel_refresh_btn', {
+                    name: 'Refresh Panel Data',
+                    icon: 'refresh',
+                    click: function () {
+                        Blockbench.showQuickMessage('Panel Refreshed!', 1000);
+                    }
+                })
+            ],
+        });
+        myCustomPanel.node.innerHTML = `
+                <div class="variant-panel" style="height: auto; max-height: 150px; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;">
+                    
+                    <button class="add_button" id="add_button";
+                        style="margin-left: auto !important; margin-right: 0 !important; font-size: 15px; background: none; border: none; font-family: inherit; color: inherit; cursor: pointer; outline: none; padding: 0; height: 100%; width: 50px; display: inline-flex; align-items: center; justify-content: center;"
+                        onmouseover="document.getElementById('btn-icon').style.color='#d3d3d3'"
+                        onmouseout="document.getElementById('btn-icon').style.color='#808080'">
+                        <i id="btn-icon" class="icon material-icons" style="transition: color 0.2s; color: #808080">add</i>
+                    </button>
+
+                    <div class="button-panel";</div>
+
+                </div>
+            `;
+        $('.add_button').on('click', () => {
+            let variantHolder = VariantManager.getVariantHolder();
+            if (variantHolder === undefined)
+                return; // this should never happen
+            let variantNum = VariantManager.variantNum;
+            VariantManager.variantNum = VariantManager.variantNum + 1;
+            let variantId = "variant_" + variantNum;
+            variantHolder.variantMap.set(variantId, new Variant());
+            console.log("hello", variantId);
+            this.rebuildPanel(); // reloads html
+        });
+        $('.button-panel').on('click', '.variant_delete', (event) => {
+            let buttonId = $(event.currentTarget).attr('id');
+            console.log("test 3");
+            if (typeof buttonId !== "string") {
+                console.log("data", buttonId);
+                return;
+            }
+            let variantHolder = VariantManager.getVariantHolder();
+            console.log("test 2");
+            if (variantHolder === undefined)
+                return; // this should never happen
+            console.log("test 1");
+            variantHolder.variantMap.delete(buttonId);
+            this.rebuildPanel();
+        });
+        $('.button-panel').on('click', '.variant_edit', () => {
+            // open VariantOptionsDialog
+        });
+        Blockbench.on('select_project', (event) => {
+            console.log("switich project, reloading variants... uuid", event.project.uuid);
+            this.rebuildPanel();
+        });
+    }
+    unregister() {
+    }
+}
+
+const UiRegister = class UiRegister {
+    static register() {
+        new VariantPanel().register();
+    }
+};
 
 (function () {
     let action1 = new Action("export_outmoded_template", {
@@ -341,8 +507,20 @@ const exportCodec = new Codec('outmoded_template_codec', {
             Blockbench.on('finish_edit', finishEdit); // this does the same thing
             Blockbench.on('update_selection', updateSelection);
             //let prop = new Property(OutlinerElement, "string", "frog", {exposed: true, default: "frog", options: {}})
-            new Property(ModelProject, "string", "namespacedId", { exposed: true, default: "frog", label: "frog1" });
-            clearHitboxCache();
+            new Property(ModelProject, "string", "credit", {
+                condition: () => Format.id === "outmoded_template",
+                exposed: true, default: "Made with BlockBench",
+                label: "Credit"
+            });
+            new Property(ModelProject, "string", "namespacedId", {
+                condition: () => Format.id === "outmoded_template",
+                exposed: true,
+                default: "",
+                label: "NamespacedId (optional)"
+            });
+            console.log("loading outmoded editor");
+            VariantManager.bindEvents();
+            UiRegister.register(); // registers ui
         },
         onunload() {
             // Cleans up memory and UI when disabled

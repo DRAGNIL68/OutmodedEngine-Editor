@@ -6,6 +6,8 @@ import { updateSelection } from "./features/Hitbox.ts";
 import clearHitboxCache from "./features/Hitbox.ts"
 
 import { exportCodec } from "./format/Codecs.ts";
+import { UiRegister } from "./ui/UiRegister.ts";
+import { Variant, VariantManager } from "./features/variants/VariantManager.ts";
 
 
 (function() {
@@ -23,6 +25,7 @@ import { exportCodec } from "./format/Codecs.ts";
     MenuBar.addAction(action1,'file.export');
 
     
+
     BBPlugin.register('bundle', {
         title: 'OutmodedEngine Editor',
         author: 'DRAGNIL68',
@@ -47,9 +50,25 @@ import { exportCodec } from "./format/Codecs.ts";
 
             //let prop = new Property(OutlinerElement, "string", "frog", {exposed: true, default: "frog", options: {}})
     
-            new Property(ModelProject, "string", "namespacedId", {exposed: true, default: "credit", label: "Made with BlockBench for the OutmodedEngine"})
+            new Property(ModelProject, "string", "credit", {
+                condition: () => Format.id === "outmoded_template",
+                exposed: true, default: "Made with BlockBench", 
+                label: "Credit"})
 
-            clearHitboxCache(); 
+            new Property(ModelProject, "string", "namespacedId", {
+                condition: () => Format.id === "outmoded_template",
+                exposed: true, 
+                default: "", 
+                label: "NamespacedId (optional)"})
+
+
+
+            console.log("loading outmoded editor")
+            VariantManager.bindEvents();
+            UiRegister.register(); // registers ui
+            
+            
+
         },
 
 

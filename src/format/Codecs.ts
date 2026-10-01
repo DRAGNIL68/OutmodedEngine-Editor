@@ -1,6 +1,6 @@
 
     import { CodecUtils } from "../tools/CodecUtils";
-    import { VariantTools } from "../tools/VariantTools"
+    import { VariantTools } from "../features/variants/VariantTools"
     export const exportCodec = new Codec('outmoded_template_codec', {
         name: 'Outmoded Template',
         extension: 'json',
@@ -62,11 +62,13 @@
                 excluded_nodes: {} // stores nodes that will not get updated
             })
 
+
+            console.log("credit", Project.credit)
+            console.log("namesapcedid", Project.namespacedId)
             let data = {
                 options: {
-
-                    namespacedId: "n/a",
-                    credit: "insert model credit", // from filed in bb
+                    namespacedId: Project.namespacedId,
+                    credit: Project.credit,
                     user_properties: {} // another place to put data
                 },
 
@@ -76,6 +78,7 @@
                 texture_variants: VariantTools.generateVariantData("default", {}),
             }
 
+            console.log("test", Project.uuid)
             return JSON.stringify(data, null, 4);
         }
     });

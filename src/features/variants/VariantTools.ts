@@ -1,4 +1,4 @@
-import { CodecUtils } from "./CodecUtils";
+import { CodecUtils } from "../../tools/CodecUtils";
 
 
 // i need to add interfaces so this code does not become unreadable
