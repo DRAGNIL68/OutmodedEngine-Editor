@@ -1,5 +1,8 @@
 import type { UiInterface } from "../../ui/UiInterface";
 import { Variant, VariantHolder, VariantManager } from "./VariantManager";
+import {VariantDialogOptionsUtil, variantOptionsDialog } from "./VariantOptionsDialog";
+
+
 
 //TODO: the most of the css and html is written with ai
 // i am sorry but i am no web dev
@@ -27,6 +30,7 @@ export class VariantPanel implements UiInterface{
                         <h1 style="font-size: 15px; margin: 0; padding-left: 8px;">${key}</h1>
                         <i class="icon material-icons" style="color: #ffcc00;">star</i>
                         <button class="variant_edit"; id="${key}"; style="margin-left: auto !important; margin-right: 0 !important; font-size: 15px; background: none; border: none; font-family: inherit; color: inherit; cursor: pointer; outline: none; padding: 0; height: 100%;display: inline-flex; align-items: center; justify-content: center;">edit</button>
+                        <button class="variant_select"; id="${key}"; style="margin-left: auto !important; margin-right: 0 !important; font-size: 15px; background: none; border: none; font-family: inherit; color: inherit; cursor: pointer; outline: none; padding: 0; height: 100%;display: inline-flex; align-items: center; justify-content: center;">select</button>
                         <button class="variant_delete"; id="${key}"
                             style=" margin-right: 0 !important; font-size: 15px; background: none; border: none; font-family: inherit; color: inherit; cursor: pointer; outline: none; padding: 0; height: 100%; display: inline-flex; align-items: center; justify-content: center;"
                             onmouseover="document.getElementById('icon_${key}').style.color='#d3d3d3'"
@@ -39,14 +43,10 @@ export class VariantPanel implements UiInterface{
     }
 
     public register(): void {
-
-        const frog = document.getElementById("variant-panel");
-        const fucck1 = document.createElement("h1");
-        frog?.append(fucck1);
         
         const myCustomPanel = new Panel('texture_variants', {
                 name: 'Texture Variants',
-                icon: 'fa-project-diagram',
+                icon: 'star',
                 condition: () => Format.id === "outmoded_template",       
                 
 
@@ -56,7 +56,7 @@ export class VariantPanel implements UiInterface{
                         icon: 'refresh',
                         click: function () {
                             
-                            Blockbench.showQuickMessage('Panel Refreshed!', 1000);
+                            
                         }
                     })
                 ],
@@ -79,8 +79,6 @@ export class VariantPanel implements UiInterface{
             `;
 
 
-            
-
             $('.add_button').on('click', () => {
                 let variantHolder = VariantManager.getVariantHolder();
 
@@ -94,8 +92,6 @@ export class VariantPanel implements UiInterface{
 
                 variantHolder.variantMap.set(variantId, new Variant())
 
-                console.log("hello", variantId)
-
                 this.rebuildPanel(); // reloads html
                 
             })
@@ -103,29 +99,45 @@ export class VariantPanel implements UiInterface{
             $('.button-panel').on('click', '.variant_delete', (event) => {
                 let buttonId = $(event.currentTarget).attr('id');
 
-                console.log("test 3")
-
                 if (typeof buttonId !== "string") {
                     console.log("data", buttonId)
                     return;
 
                 }
 
-                
                 let variantHolder = VariantManager.getVariantHolder();
-                console.log("test 2")
+
                 if (variantHolder === undefined)
                     return; // this should never happen
-                console.log("test 1")
+                
+                if (buttonId === "default"){
+                    Blockbench.showQuickMessage('Cannot delete default variant', 1000);
+                    return;
+                }
+
                 variantHolder.variantMap.delete(buttonId);
 
                 this.rebuildPanel();
             })
 
-            $('.button-panel').on('click', '.variant_edit', () => {
-                // open VariantOptionsDialog
+            $('.button-panel').on('click', '.variant_edit', (event) => {
+                let buttonId = $(event.currentTarget).attr('id'); 
 
+                if (buttonId === "default"){
+                    Blockbench.showQuickMessage('Cannot edit default variant', 1000);
+                    return;
+                }
+                    
 
+                variantOptionsDialog.show();
+                
+                VariantDialogOptionsUtil.getGroups(); // adds to menu
+            })
+
+            $('.button-panel').on('click', '.variant_select', (event) => {
+                let buttonId = $(event.currentTarget).attr('id');
+                Blockbench.showQuickMessage('Texture variant '+buttonId+' selected', 1000);
+                //VariantManager.
 
             })
 
