@@ -258,11 +258,13 @@
             console.log("map", CodecUtils.groupFlatten());
             for (const group of Group.all) { // replace this with groups 
                 let data = {
+                    uuid: group.uuid,
                     type: "group",
                     name: group.name,
                     transform: {
                         position: group.origin,
                         left_rotation: group.rotation,
+                        translation: group.origin,
                         scale: [1, 1, 1] // temp
                     },
                     properties: {},
@@ -544,7 +546,6 @@
                 }
                 variantOptionsDialog.show();
                 VariantDialogOptionsUtil.getGroups(); // adds to menu
-                console.log("adadada3333");
             });
             $('.button-panel').on('click', '.variant_select', (event) => {
                 let buttonId = $(event.currentTarget).attr('id');

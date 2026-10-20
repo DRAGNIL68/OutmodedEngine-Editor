@@ -1,6 +1,7 @@
 
     import { CodecUtils } from "../tools/CodecUtils";
     import { VariantTools } from "../features/variants/VariantTools"
+
     export const exportCodec = new Codec('outmoded_template_codec', {
         name: 'Outmoded Template',
         extension: 'json',
@@ -15,13 +16,15 @@
             
             
             for (const group of Group.all){ // replace this with groups 
-                
+
                 let data = {
+                    uuid: group.uuid,
                     type: "group",
                     name: group.name,
                     transform: {
                         position: group.origin,
                         left_rotation: group.rotation,
+                        translation:  group.origin,
                         scale: [1,1,1] // temp
                     },
                     properties: {},
@@ -43,7 +46,7 @@
                     name: boundingBox.name,
                     transform: {
                         position: boundingBox.origin,
-                        left_rotation: [0,0,0], // this is not really needed
+                        left_rotation: [0,0,0,0], // this is not really needed
                         scale: boundingBox.size()
                     },
                     properties: {},
@@ -66,7 +69,7 @@
             console.log("credit", Project.credit)
             console.log("namesapcedid", Project.namespacedId)
             let data = {
-                options: {
+                settings: {
                     namespacedId: Project.namespacedId,
                     credit: Project.credit,
                     user_properties: {} // another place to put data

@@ -15,11 +15,7 @@ export class VariantDialogOptionsUtil{
                 `);
         })
     }
-
-
-
 }
-
 
 export const variantOptionsDialog = new Dialog({
     id: 'test1',
