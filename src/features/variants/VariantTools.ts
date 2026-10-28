@@ -1,4 +1,5 @@
 import { CodecUtils } from "../../tools/CodecUtils";
+import { Variant, VariantManager } from "./VariantManager";
 
 
 // i need to add interfaces so this code does not become unreadable
@@ -72,15 +73,41 @@ export const VariantTools = class VariantTools {
         return file;
     }
 
-    public static generateResourcePack(): Map<UUID, any> {
+    public static generateAllVariants(): Map<string, any> {
+        
+        // DO NOT CHANGE DATA YOU WILL BREAK THINGS.
+        // This is why we make data private kids.
+        let variantMap = VariantManager.getVariantHolder()?.variantMap
 
+        let variantDataMap: Map<string, any> = CodecUtils.groupFlatten();
+        
+        variantMap?.forEach( (data, key) => { // why on gods grean earth does javascript use '=>' and not '->' for lambdas?
+            // I just read the kotlin guide on higher-order functions and you can do some really wacky things with it
+            // I may make my own annotation based system for java to do some odd stuff using bytebuddy code gen
+            let variant = Object.fromEntries(this.generateVariantResource(key)) 
+            variantDataMap.set(key, variant);
+        })
+
+
+        return variantDataMap;
+    }
+
+    public static generateVariantResource(variantId: string): Map<UUID, any> {
+
+        let variant: Variant | undefined = VariantManager.getVariantHolder()?.variantMap.get(variantId)
+
+        if (variant == undefined)
+            return new Map<UUID, any>();
+
+        
         let groupCubeMap: Map<UUID, Cube[]> = CodecUtils.groupFlatten();
+        let textureToTextureMap: Map<string, string> = variant.getTextureMap()
 
         let resourceMap = new Map<UUID, any>();
 
-        let textureMap = new Map<string, any>() // id : texture name
-
         groupCubeMap.forEach((cubes, key) => {
+
+            let textureMap = new Map<string, any>() // id : texture name
 
             let file = {
                 format_version: "1.21.11",
@@ -103,8 +130,15 @@ export const VariantTools = class VariantTools {
 
                     let txt: false | Texture | null | undefined = data.getTexture();
 
-                    if (txt instanceof Texture){             
-                        textureMap.set(txt.id, txt.name);
+                    if (txt instanceof Texture){           
+                        
+                        let textName: string = txt.name;
+
+                        if (textureToTextureMap.has(txt.name)){ // replaces the default texture with a new and shiny one from a variant
+                            textName = textureToTextureMap.get(txt.name) ?? "UNDEFINED" // if for some reason the variant texture is null replace with a string
+                        }
+
+                        textureMap.set(txt.id, textName);
 
                         faces.set(face, {
                             uv: data.uv,

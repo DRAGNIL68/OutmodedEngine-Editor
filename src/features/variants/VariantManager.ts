@@ -6,7 +6,6 @@ export class VariantManager {
 
     private static variantHolderMap = new Map<string, VariantHolder>();
 
-
     public static bindEvents(){
 
         console.log("binding events")
@@ -38,6 +37,7 @@ export class VariantManager {
     }
     
     /**
+     * A variant holder, holds the variants for an open model.
      * uses the current open project
      * @returns VariantHolder | undefined
      */
@@ -60,7 +60,6 @@ export class VariantManager {
 
             let variant = new Variant();
             variant.isDefault = true;
-            variant.generateCubeUvMap();
 
             variantHolder.variantMap.set("default", variant)
             this.variantHolderMap.set(uuid, variantHolder);
@@ -121,8 +120,6 @@ export class Variant{
 
     private textureMap = new Map<string, string>()// texture : texture
     
-
-
 
     private excludedGroupMap = new Set<UUID>;
     

@@ -45,7 +45,7 @@ export const variantOptionsDialog = new Dialog({
         `
     },
 
-    onConfirm(formResult, event) {
+    onConfirm(formResult, event) { 
         
         //const initialData = this.component.id
         console.log(this.component);

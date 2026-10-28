@@ -65,7 +65,7 @@
                 excluded_nodes: {} // stores nodes that will not get updated
             })
 
-
+// basically
             console.log("credit", Project.credit)
             console.log("namesapcedid", Project.namespacedId)
             let data = {
@@ -78,7 +78,7 @@
                 textures: Object.fromEntries(VariantTools.getAllTexturesBase64()),
                 structure: Object.fromEntries(nodeStructure),
                 animations: "data",
-                texture_variants: VariantTools.generateVariantData("default", {}),
+                texture_variants: Object.fromEntries(VariantTools.generateAllVariants()),
             }
 
             console.log("test", Project.uuid)
