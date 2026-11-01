@@ -74,20 +74,19 @@ export const VariantTools = class VariantTools {
     }
 
     public static generateAllVariants(): Map<string, any> {
-        
         // DO NOT CHANGE DATA YOU WILL BREAK THINGS.
         // This is why we make data private kids.
         let variantMap = VariantManager.getVariantHolder()?.variantMap
 
-        let variantDataMap: Map<string, any> = CodecUtils.groupFlatten();
+        let variantDataMap: Map<string, any> = new Map<UUID, any>();
         
         variantMap?.forEach( (data, key) => { // why on gods grean earth does javascript use '=>' and not '->' for lambdas?
             // I just read the kotlin guide on higher-order functions and you can do some really wacky things with it
             // I may make my own annotation based system for java to do some odd stuff using bytebuddy code gen
+
             let variant = Object.fromEntries(this.generateVariantResource(key)) 
             variantDataMap.set(key, variant);
         })
-
 
         return variantDataMap;
     }

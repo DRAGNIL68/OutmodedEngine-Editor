@@ -1,7 +1,6 @@
 import type { UiInterface } from "../../ui/UiInterface";
-import { Variant, VariantHolder, VariantManager } from "./VariantManager";
-import {VariantDialogOptionsUtil, variantOptionsDialog } from "./VariantOptionsDialog";
-
+import { Variant, VariantManager } from "./VariantManager";
+import { VariantOptionsDialog } from "./VariantOptionsDialog";
 
 
 //TODO: the most of the css and html is written with ai
@@ -12,7 +11,7 @@ import {VariantDialogOptionsUtil, variantOptionsDialog } from "./VariantOptionsD
 export class VariantPanel implements UiInterface{
 
 
-    public rebuildPanel(){
+    public static rebuildPanel(){
 
         $('.button-panel').empty(); // clear all elements
 
@@ -39,7 +38,6 @@ export class VariantPanel implements UiInterface{
                         </button>
                     </div>`)
         })
-
     }
 
     public register(): void {
@@ -60,7 +58,6 @@ export class VariantPanel implements UiInterface{
                         }
                     })
                 ],
-                
             });
 
             myCustomPanel.node.innerHTML = `
@@ -92,7 +89,7 @@ export class VariantPanel implements UiInterface{
 
                 variantHolder.variantMap.set(variantId, new Variant())
 
-                this.rebuildPanel(); // reloads html
+                VariantPanel.rebuildPanel(); // reloads html
                 
             })
 
@@ -117,7 +114,7 @@ export class VariantPanel implements UiInterface{
 
                 variantHolder.variantMap.delete(buttonId);
 
-                this.rebuildPanel();
+                VariantPanel.rebuildPanel();
             })
 
             $('.button-panel').on('click', '.variant_edit', (event) => {
@@ -127,24 +124,27 @@ export class VariantPanel implements UiInterface{
                     Blockbench.showQuickMessage('Cannot edit default variant', 1000);
                     return;
                 }
-                    
 
-                variantOptionsDialog.show();
+                if (buttonId === undefined)
+                    return;
+
+                VariantManager.editVariant = buttonId;
+                    
+                new VariantOptionsDialog().open();
                 
-                VariantDialogOptionsUtil.getGroups(); // adds to menu
+                //VariantDialogOptionsUtil.getGroups(); // adds to menu
             })
 
             $('.button-panel').on('click', '.variant_select', (event) => {
                 let buttonId = $(event.currentTarget).attr('id');
                 Blockbench.showQuickMessage('Texture variant '+buttonId+' selected', 1000);
-                //VariantManager.
-
+                
             })
 
 
             Blockbench.on('select_project', (event) => {
                 console.log("switich project, reloading variants... uuid", event.project.uuid)
-                this.rebuildPanel();
+                VariantPanel.rebuildPanel();
             })
 
             

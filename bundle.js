@@ -146,6 +146,118 @@
         }
     };
 
+    // i am not making data private. 
+    // If you change values you are intentionally trying to break my code
+    class VariantManager {
+        static variantNum = 0;
+        static variantHolderMap = new Map();
+        static editVariant = "default";
+        static bindEvents() {
+            console.log("binding events");
+            Blockbench.on('save_project', (data) => {
+                Project.uuid;
+                console.log("bind save project");
+            });
+            Blockbench.on('load_project', (data) => {
+                Project.uuid;
+                console.log("bind load project");
+            });
+            Blockbench.on('select_project', (data) => {
+                VariantManager.getVariantHolder();
+                // this triggers the default variant to be created
+                // but only for Outmoded Templates
+            });
+        }
+        static loadVariantHolder(project, json) {
+            this.variantHolderMap.set(project, new VariantHolder("uuid"));
+        }
+        static removeVariantHolder(project) {
+            this.variantHolderMap.delete(project);
+        }
+        /**
+         * A variant holder, holds the variants for an open model.
+         * uses the current open project
+         * @returns VariantHolder | undefined
+         */
+        static getVariantHolder() {
+            let uuid = Project.uuid;
+            if (Project.format === undefined)
+                return undefined; // this happens when there is no project (main menu)
+            // checks if its the correct format (outmoded_template)
+            if (Project.format.id !== "outmoded_template") {
+                return undefined;
+            }
+            // creates the variant holder for the current project
+            if (!this.variantHolderMap.has(uuid)) {
+                // adds default variant
+                let variantHolder = new VariantHolder(uuid);
+                let variant = new Variant();
+                variant.isDefault = true;
+                variantHolder.variantMap.set("default", variant);
+                this.variantHolderMap.set(uuid, variantHolder);
+            }
+            return this.variantHolderMap.get(uuid);
+        }
+    }
+    // no this entire file is terrible
+    class VariantHolder {
+        project;
+        variantNum = 0;
+        currentVariant = "default";
+        variantMap = new Map();
+        constructor(project) {
+            this.project = project;
+            let variant = new Variant();
+            Cube.all.forEach((cube) => {
+            });
+            this.variantMap.set("default", variant);
+        }
+        getProject() { return this.project; }
+        // converts the VariantHolder to json
+        toJson() {
+            //JSON.stringify(data, null, 4);
+            let data = {
+                variantNum: this.variantNum,
+            };
+            return JSON.stringify(data, null, 4);
+        }
+        fromJson(json) {
+        }
+    }
+    class Variant {
+        isDefault = false;
+        defaultMap = new Map();
+        textureMap = new Map(); // texture : texture
+        excludedGroupMap = new Set;
+        getTextureMap() {
+            return this.textureMap;
+        }
+        getExcludedGroupMap() {
+            return this.excludedGroupMap;
+        }
+        toJson() {
+            return "";
+        }
+        fromJson(json) {
+        }
+        //NEVER USED
+        // dont know why i made it
+        generateCubeUvMap() {
+            if (this.isDefault === false)
+                console.warn("non default variant generated CubeUvMap");
+            Cube.all.forEach((cube) => {
+                ({
+                    north: cube.faces["north"].getTexture(),
+                    east: cube.faces["north"].getTexture(),
+                    south: cube.faces["north"].getTexture(),
+                    west: cube.faces["north"].getTexture(),
+                    up: cube.faces["north"].getTexture(),
+                    down: cube.faces["north"].getTexture(),
+                });
+            });
+        }
+    }
+
     // i need to add interfaces so this code does not become unreadable
     const VariantTools = class VariantTools {
         static namespace = "outmoded_engine";
@@ -197,11 +309,28 @@
             });
             return file;
         }
-        static generateResourcePack() {
+        static generateAllVariants() {
+            // DO NOT CHANGE DATA YOU WILL BREAK THINGS.
+            // This is why we make data private kids.
+            let variantMap = VariantManager.getVariantHolder()?.variantMap;
+            let variantDataMap = new Map();
+            variantMap?.forEach((data, key) => {
+                // I just read the kotlin guide on higher-order functions and you can do some really wacky things with it
+                // I may make my own annotation based system for java to do some odd stuff using bytebuddy code gen
+                let variant = Object.fromEntries(this.generateVariantResource(key));
+                variantDataMap.set(key, variant);
+            });
+            return variantDataMap;
+        }
+        static generateVariantResource(variantId) {
+            let variant = VariantManager.getVariantHolder()?.variantMap.get(variantId);
+            if (variant == undefined)
+                return new Map();
             let groupCubeMap = CodecUtils.groupFlatten();
+            let textureToTextureMap = variant.getTextureMap();
             let resourceMap = new Map();
-            let textureMap = new Map(); // id : texture name
             groupCubeMap.forEach((cubes, key) => {
+                let textureMap = new Map(); // id : texture name
                 let file = {
                     format_version: "1.21.11",
                     texture_size: [-1, -1],
@@ -218,7 +347,11 @@
                     for (const [face, data] of Object.entries(cube.faces)) {
                         let txt = data.getTexture();
                         if (txt instanceof Texture) {
-                            textureMap.set(txt.id, txt.name);
+                            let textName = txt.name;
+                            if (textureToTextureMap.has(txt.name)) { // replaces the default texture with a new and shiny one from a variant
+                                textName = textureToTextureMap.get(txt.name) ?? "UNDEFINED"; // if for some reason the variant texture is null replace with a string
+                            }
+                            textureMap.set(txt.id, textName);
                             faces.set(face, {
                                 uv: data.uv,
                                 texture: "#" + txt.id
@@ -281,7 +414,7 @@
                     name: boundingBox.name,
                     transform: {
                         position: boundingBox.origin,
-                        left_rotation: [0, 0, 0], // this is not really needed
+                        left_rotation: [0, 0, 0, 0], // this is not really needed
                         scale: boundingBox.size()
                     },
                     properties: {},
@@ -298,7 +431,7 @@
             console.log("credit", Project.credit);
             console.log("namesapcedid", Project.namespacedId);
             let data = {
-                options: {
+                settings: {
                     namespacedId: Project.namespacedId,
                     credit: Project.credit,
                     user_properties: {} // another place to put data
@@ -306,164 +439,223 @@
                 textures: Object.fromEntries(VariantTools.getAllTexturesBase64()),
                 structure: Object.fromEntries(nodeStructure),
                 animations: "data",
-                texture_variants: VariantTools.generateVariantData("default", {}),
+                texture_variants: Object.fromEntries(VariantTools.generateAllVariants()),
             };
-            console.log("test", Project.uuid);
             return JSON.stringify(data, null, 4);
         }
     });
 
-    // i am not making data private. 
-    // If you change values you are intentionally trying to break my code
-    class VariantManager {
-        static variantNum = 0;
-        static variantHolderMap = new Map();
-        static bindEvents() {
-            console.log("binding events");
-            Blockbench.on('save_project', (data) => {
-                Project.uuid;
-                console.log("bind save project");
-            });
-            Blockbench.on('load_project', (data) => {
-                Project.uuid;
-                console.log("bind load project");
-            });
-            Blockbench.on('select_project', (data) => {
-                VariantManager.getVariantHolder();
-                // this triggers the default variant to be created
-                // but only for Outmoded Templates
+    class VariantOptionsDialog {
+        static textureMap = new Map();
+        static counter = "1";
+        static createTextureMapHTML() {
+            $('#texture_map_container').empty(); // clear all elements
+            let panel = $('#texture_map_container');
+            // from -> to
+            // textures will always include .png
+            //TODO: add check to stop players from
+            this.textureMap.forEach((toFrom, uuid) => {
+                let sFrom = "";
+                let sTo = "";
+                if (toFrom !== " ") {
+                    let split = toFrom.split(":");
+                    sFrom = split[0];
+                    sTo = split[1];
+                }
+                panel.append(`
+                <div class="texture-map", id="texture_map_box"> 
+                    <button class="texture-map-box">delete</button> 
+                    <input class="texture-map-box" type="text" value="${sFrom}" id="texture_map_box_input_from">
+                    
+                    <span style="color: aliceblue; font-weight: bold;">&gt;</span>
+
+                    <input class="texture-map-box" type="text" value="${sTo}" id="texture_map_box_input_to">
+                </div> 
+            `);
             });
         }
-        static loadVariantHolder(project, json) {
-            this.variantHolderMap.set(project, new VariantHolder("uuid"));
-        }
-        static removeVariantHolder(project) {
-            this.variantHolderMap.delete(project);
-        }
-        /**
-         * uses the current open project
-         * @returns VariantHolder | undefined
-         */
-        static getVariantHolder() {
-            let uuid = Project.uuid;
-            if (Project.format === undefined)
-                return undefined; // this happens when there is no project (main menu)
-            // checks if its the correct format (outmoded_template)
-            if (Project.format.id !== "outmoded_template") {
-                return undefined;
-            }
-            // creates the variant holder for the current project
-            if (!this.variantHolderMap.has(uuid)) {
-                // adds default variant
-                let variantHolder = new VariantHolder(uuid);
-                let variant = new Variant();
-                variant.isDefault = true;
-                variant.generateCubeUvMap();
-                variantHolder.variantMap.set("default", variant);
-                this.variantHolderMap.set(uuid, variantHolder);
-            }
-            return this.variantHolderMap.get(uuid);
+        open() {
+            let variantHolder = VariantManager.getVariantHolder();
+            if (variantHolder === undefined)
+                return; // this should never happen
+            $('#texture_map_container');
+            let variant = variantHolder.variantMap.get(variantHolder.currentVariant);
+            if (variant == undefined)
+                return;
+            VariantOptionsDialog.textureMap.clear();
+            variant.getTextureMap().forEach((to, from) => {
+                VariantOptionsDialog.textureMap.set(from, to);
+            });
+            VariantOptionsDialog.textureMap.set("example", "from:to");
+            const variantOptionsDialog = new Dialog({
+                id: 'test1',
+                title: 'Texture Variant Options',
+                width: 600,
+                onOpen() {
+                    let variantId = VariantManager.editVariant;
+                    variantOptionsDialog.object.innerHTML = `
+                <style> 
+
+                .variant_input {
+                    width: 100%;
+                }
+
+                .container { 
+                    display: flex; 
+                    gap: 5px; 
+                    margin-top: 5px;
+                } 
+
+                .scrollable-box { 
+                    height: 200px; 
+                    overflow-y: auto; 
+                    background-color: #252629; 
+                    padding: 10px; 
+                    flex: 1; 
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                } 
+
+                /* Changed fixed height to min-height to give elements vertical breathing room */
+                .texture-map { 
+                    background-color: #021347; 
+                    min-height: 36px; 
+                    padding: 6px; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: space-between; 
+                    gap: 5px;
+                } 
+
+                /* Removed rigid height so items fit neatly inside the flex layout */
+                .texture-map-box { 
+                    background-color: #4d4d4d; 
+                    align-self: stretch;
+                    width: 100px; 
+                    color: #ffffff; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    border: none;
+                    font-size: 13px;
+                    cursor: pointer;
+                } 
+
+                input.texture-map-box {
+                    background-color: #4d4d4d;
+                    color: #ffffff;
+                }
+
+                .btn-new {
+                    background-color: #4d4d4d; 
+                    color: #ffffff;
+                    padding: 6px 12px;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 13px;
+                    margin-bottom: 5px;
+                }
+                </style> 
+
+                <div> 
+                    <h1 style="font-size: 20px;">Texture variant options</h1> 
+                    <h1 style="font-size: 20px;">Variant id</h1> 
+                    <input class="variant_input" value="${variantId}" type="text" id="fname" name="fname"> 
+                </div> 
+
+                <div class="select-list"> 
+                    <div class="title">Variant options</div> 
+                </div>
+
+                <h1>Texture maps</h1> 
+                <button class="btn-new">new mapping</button> 
+
+                <div class="container"> 
+                    <div class="scrollable-box" id="texture_map_container"> 
+
+                    </div>
+                </div> 
+
+                <h1>Excluded groups</h1> 
+                <div class="container"> 
+                    <div class="scrollable-box"> 
+
+                        <div class="texture-map"> 
+                            <button class="texture-map-box">remove</button> 
+                            <div class="texture-map-box">group3</div> 
+                        </div> 
+
+                        <div class="texture-map"> 
+                            <button class="texture-map-box">remove</button> 
+                            <div class="texture-map-box">group4</div> 
+                        </div>
+                    </div> 
+
+                    <div class="scrollable-box"> 
+                        <div class="texture-map"> 
+                            <button class="texture-map-box">add</button> 
+                            <div class="texture-map-box">group1</div> 
+                        </div> 
+
+                        <div class="texture-map"> 
+                            <button class="texture-map-box">add</button> 
+                            <div class="texture-map-box">group2</div> 
+                        </div> 
+                    </div>
+                </div>
+
+                <div> 
+                    <button class="confirm">confirm</button> 
+                    <button class="cancel">cancel</button> 
+                </div> 
+                `;
+                    VariantOptionsDialog.createTextureMapHTML();
+                    $('#confirm').on('click', () => {
+                        var inputValue = String($('.variant_input').val());
+                        if (inputValue.length === 0) {
+                            Blockbench.showQuickMessage('Cannot set variant id to nothing', 1000);
+                            return;
+                        }
+                        let variantHolder = VariantManager.getVariantHolder();
+                        if (variantHolder === undefined)
+                            return;
+                        let variant = variantHolder.variantMap.get(variantId);
+                        if (variant === undefined)
+                            return;
+                        if (variantHolder.variantMap.has(inputValue)) { // checks if your trying to do someting stupid and set an exising variant to something else
+                            if (inputValue !== variantId) {
+                                Blockbench.showQuickMessage('Variant id already used', 1000);
+                                return;
+                            }
+                        }
+                    });
+                    $('.cancel').on('click', () => {
+                        variantOptionsDialog.close();
+                    });
+                    $('.btn-new').on('click', () => {
+                        let variantHolder = VariantManager.getVariantHolder();
+                        if (variantHolder === undefined)
+                            return; // this should never happen
+                        $('#texture_map_container');
+                        let variant = variantHolder.variantMap.get(variantHolder.currentVariant);
+                        if (variant == undefined)
+                            return;
+                        VariantOptionsDialog.textureMap.set(crypto.randomUUID(), "from:to"); // uses a random uuid in the plaen to represent the ui comp 
+                        // ui element -> from:to
+                        VariantOptionsDialog.createTextureMapHTML();
+                    });
+                },
+            });
+            variantOptionsDialog.show();
         }
     }
-    // no this entire file is terrible
-    class VariantHolder {
-        project;
-        variantNum = 0;
-        currentVariant = "default";
-        variantMap = new Map();
-        constructor(project) {
-            this.project = project;
-            let variant = new Variant();
-            Cube.all.forEach((cube) => {
-            });
-            this.variantMap.set("default", variant);
-        }
-        getProject() { return this.project; }
-        toJson() {
-            return "";
-        }
-        fromJson(json) {
-        }
-    }
-    class Variant {
-        isDefault = false;
-        defaultMap = new Map();
-        textureMap = new Map(); // texture : texture
-        excludedGroupMap = new Set;
-        getTextureMap() {
-            return this.textureMap;
-        }
-        getExcludedGroupMap() {
-            return this.excludedGroupMap;
-        }
-        generateCubeUvMap() {
-            if (this.isDefault === false)
-                console.warn("non default variant generated CubeUvMap");
-            Cube.all.forEach((cube) => {
-                ({
-                    north: cube.faces["north"].getTexture(),
-                    east: cube.faces["north"].getTexture(),
-                    south: cube.faces["north"].getTexture(),
-                    west: cube.faces["north"].getTexture(),
-                    up: cube.faces["north"].getTexture(),
-                    down: cube.faces["north"].getTexture(),
-                });
-            });
-        }
-    }
-
-    class VariantDialogOptionsUtil {
-        static getGroups() {
-            let html = $('.select-options');
-            html.empty();
-            CodecUtils.groupFlatten().forEach((value, string) => {
-                html.append(`
-            </div>
-                <div class="option"> 
-                <input type="checkbox" name="${value}" id="option4" />
-                <label for="option4">Option 1</label>
-            </div>
-                `);
-            });
-        }
-    }
-    const variantOptionsDialog = new Dialog({
-        id: 'test1',
-        title: 'Texture Variant Options',
-        width: 600,
-        onOpen() {
-            variantOptionsDialog.object.innerHTML = `
-        <div>
-            <h1 style="font-size: 20px;">Texture variant options</h1>
-
-            <h1 style="font-size: 20px;">variant id</h1>
-            <input width: 100%; type="text"; id="fname"; name="fname;">
-        </div>
-
-        <div class="select-list">
-            <div class="title">Configure Table</div>
-            <div class="select-options">
-        </div>
-
-        <div>
-            <button>confirm</button>
-            <button>cancel</button>
-        </div>
-        
-        
-        `;
-        },
-        onConfirm(formResult, event) {
-            //const initialData = this.component.id
-            console.log(this.component);
-        },
-    });
 
     //TODO: the most of the css and html is written with ai
     // i am sorry but i am no web dev
     // yes the typescript is human code
     class VariantPanel {
-        rebuildPanel() {
+        static rebuildPanel() {
             $('.button-panel').empty(); // clear all elements
             let variantHolder = VariantManager.getVariantHolder();
             if (variantHolder === undefined)
@@ -520,7 +712,7 @@
                 VariantManager.variantNum = VariantManager.variantNum + 1;
                 let variantId = "variant_" + variantNum;
                 variantHolder.variantMap.set(variantId, new Variant());
-                this.rebuildPanel(); // reloads html
+                VariantPanel.rebuildPanel(); // reloads html
             });
             $('.button-panel').on('click', '.variant_delete', (event) => {
                 let buttonId = $(event.currentTarget).attr('id');
@@ -536,7 +728,7 @@
                     return;
                 }
                 variantHolder.variantMap.delete(buttonId);
-                this.rebuildPanel();
+                VariantPanel.rebuildPanel();
             });
             $('.button-panel').on('click', '.variant_edit', (event) => {
                 let buttonId = $(event.currentTarget).attr('id');
@@ -544,17 +736,19 @@
                     Blockbench.showQuickMessage('Cannot edit default variant', 1000);
                     return;
                 }
-                variantOptionsDialog.show();
-                VariantDialogOptionsUtil.getGroups(); // adds to menu
+                if (buttonId === undefined)
+                    return;
+                VariantManager.editVariant = buttonId;
+                new VariantOptionsDialog().open();
+                //VariantDialogOptionsUtil.getGroups(); // adds to menu
             });
             $('.button-panel').on('click', '.variant_select', (event) => {
                 let buttonId = $(event.currentTarget).attr('id');
                 Blockbench.showQuickMessage('Texture variant ' + buttonId + ' selected', 1000);
-                //VariantManager.
             });
             Blockbench.on('select_project', (event) => {
                 console.log("switich project, reloading variants... uuid", event.project.uuid);
-                this.rebuildPanel();
+                VariantPanel.rebuildPanel();
             });
         }
         unregister() {

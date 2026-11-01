@@ -65,7 +65,7 @@
                 excluded_nodes: {} // stores nodes that will not get updated
             })
 
-// basically
+
             console.log("credit", Project.credit)
             console.log("namesapcedid", Project.namespacedId)
             let data = {
@@ -81,7 +81,6 @@
                 texture_variants: Object.fromEntries(VariantTools.generateAllVariants()),
             }
 
-            console.log("test", Project.uuid)
             return JSON.stringify(data, null, 4);
         }
     });

@@ -5,6 +5,7 @@ export class VariantManager {
     public static variantNum = 0;
 
     private static variantHolderMap = new Map<string, VariantHolder>();
+    public static editVariant: string = "default"
 
     public static bindEvents(){
 
@@ -94,15 +95,21 @@ export class VariantHolder {
 
     public getProject(): UUID { return this.project;}
 
+
+    // converts the VariantHolder to json
     public toJson(): string {
-        return "";
+        //JSON.stringify(data, null, 4);
+        let data = {
+            variantNum: this.variantNum,
+        }
+
+
+        return JSON.stringify(data, null, 4);
     }
 
     public fromJson(json: string){
 
     }
-
-
 }
 
 interface CubeUvMap {
@@ -117,10 +124,8 @@ interface CubeUvMap {
 export class Variant{
     public isDefault = false
     public defaultMap = new Map<UUID, CubeUvMap>()
-
-    private textureMap = new Map<string, string>()// texture : texture
     
-
+    private textureMap = new Map<string, string>()// texture : texture
     private excludedGroupMap = new Set<UUID>;
     
     public getTextureMap(){
@@ -131,6 +136,17 @@ export class Variant{
         return this.excludedGroupMap
     }
 
+    public toJson(): string {
+        
+        return "";
+    }
+
+    public fromJson(json: string){
+
+    }
+
+    //NEVER USED
+    // dont know why i made it
     public generateCubeUvMap(){
 
         if (this.isDefault === false)
@@ -146,12 +162,8 @@ export class Variant{
                     up: cube.faces["north"].getTexture(),
                     down: cube.faces["north"].getTexture(),
             }
-            
         })
-
-
     }
-    
 }
 
 
