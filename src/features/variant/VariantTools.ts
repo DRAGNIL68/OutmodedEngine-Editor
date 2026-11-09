@@ -1,5 +1,7 @@
-import { CodecUtils } from "../../tools/CodecUtils";
-import { Variant, VariantManager } from "./VariantManager";
+import { CodecUtils } from "../../CodecUtils";
+import type { Variant } from "./Variant";
+import { VariantManager } from "./VariantManager";
+
 
 
 // i need to add interfaces so this code does not become unreadable
@@ -66,8 +68,7 @@ export const VariantTools = class VariantTools {
             }
             
             file.textures = Object.fromEntries(textureMap);
-            file.elements.push(cubeData);
-                
+            file.elements.push(cubeData);   
         })
 
         return file;
@@ -76,7 +77,7 @@ export const VariantTools = class VariantTools {
     public static generateAllVariants(): Map<string, any> {
         // DO NOT CHANGE DATA YOU WILL BREAK THINGS.
         // This is why we make data private kids.
-        let variantMap = VariantManager.getVariantHolder()?.variantMap
+        let variantMap = VariantManager.getCurrentVariantHolder()?.variantMap
 
         let variantDataMap: Map<string, any> = new Map<UUID, any>();
         
@@ -93,7 +94,7 @@ export const VariantTools = class VariantTools {
 
     public static generateVariantResource(variantId: string): Map<UUID, any> {
 
-        let variant: Variant | undefined = VariantManager.getVariantHolder()?.variantMap.get(variantId)
+        let variant: Variant | undefined = VariantManager.getCurrentVariantHolder()?.variantMap.get(variantId)
 
         if (variant == undefined)
             return new Map<UUID, any>();

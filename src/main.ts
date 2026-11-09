@@ -1,16 +1,16 @@
-import { customFormat } from "./format/ModelFormat.js";
+import { mount, unmount } from 'svelte';
+import './app.css';
+import App from './App.svelte';
+
 
 import { finishEdit } from "./features/Hitbox.ts";
 import { initEdit } from "./features/Hitbox.ts";
 import { updateSelection } from "./features/Hitbox.ts";
-import clearHitboxCache from "./features/Hitbox.ts"
-
 import { exportCodec } from "./format/Codecs.ts";
-import { UiRegister } from "./ui/UiRegister.ts";
-import { Variant, VariantManager } from "./features/variants/VariantManager.ts";
-
+import { VariantManager } from './features/variant/VariantManager.ts';
 
 (function() {
+
 
     let action1 = new Action("export_outmoded_template", {
         name: "Export Outmoded Template",
@@ -24,9 +24,8 @@ import { Variant, VariantManager } from "./features/variants/VariantManager.ts";
     })
     MenuBar.addAction(action1,'file.export');
 
-    
 
-    BBPlugin.register('bundle', {
+        BBPlugin.register('bundle', {
         title: 'OutmodedEngine Editor',
         author: 'DRAGNIL68',
         description: 'powerful tools for the OutmodedEngine',
@@ -59,15 +58,12 @@ import { Variant, VariantManager } from "./features/variants/VariantManager.ts";
                 condition: () => Format.id === "outmoded_template",
                 exposed: true, 
                 default: "", 
-                label: "NamespacedId (optional)"})
+                label: "NamespacedId (optional)"});
 
 
 
-            console.log("loading outmoded editor")
+            console.log("loading outmoded editor");
             VariantManager.bindEvents();
-            UiRegister.register(); // registers ui
-            
-            
 
         },
 
@@ -80,5 +76,37 @@ import { Variant, VariantManager } from "./features/variants/VariantManager.ts";
             Blockbench.removeListener('finish_edit', finishEdit);
             Blockbench.removeListener('update_selection', updateSelection);
         }
-    }); 
+    });
+
+    
+    // Create and display the dialog
+    function openSvelteDialog() {
+        const container = document.createElement('div');
+
+        let app: ReturnType<typeof mount> | undefined;
+
+        const dialog = new Dialog('outmoded_editor_dialog', {
+            title: 'OutmodedEngine Editor',
+            width: 700,
+            lines: [container],
+
+            onClose() {
+                if (app) {
+                    unmount(app);
+                    app = undefined;
+                }
+
+                return true;
+            }
+        });
+
+        dialog.show();
+
+        app = mount(App, {
+            target: container
+        });
+
+        return dialog;
+    }
+
 })();

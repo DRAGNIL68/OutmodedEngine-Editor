@@ -1,0 +1,30 @@
+.outmoded-editor {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --accent: #aa3bff;
+
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.outmoded-editor h1,
+.outmoded-editor h2 {
+  font-family: system-ui, sans-serif;
+  color: var(--text-h);
+}
+
+.outmoded-editor p {
+  margin: 0;
+}
+
+.outmoded-editor code {
+  font-family: ui-monospace, Consolas, monospace;
+}

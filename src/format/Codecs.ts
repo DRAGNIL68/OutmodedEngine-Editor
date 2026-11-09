@@ -1,6 +1,7 @@
 
-    import { CodecUtils } from "../tools/CodecUtils";
-    import { VariantTools } from "../features/variants/VariantTools"
+    import { CodecUtils } from "../CodecUtils";
+import { VariantTools } from "../features/variant/VariantTools";
+
 
     export const exportCodec = new Codec('outmoded_template_codec', {
         name: 'Outmoded Template',
@@ -11,7 +12,8 @@
             console.log("compiling cubes")
             let nodeStructure = new Map<UUID, any>();
 
-            let map: Map<UUID, Cube[]> = CodecUtils.groupFlatten();
+
+            //let map: Map<UUID, Cube[]> = CodecUtils.groupFlatten();
             console.log("map", CodecUtils.groupFlatten())
             
             
