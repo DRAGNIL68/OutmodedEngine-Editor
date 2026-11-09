@@ -8,7 +8,6 @@ export class VariantManager{
     public static bindEvents(){
         Blockbench.on("select_project", event => {
             
-
             if (event.project.format.id !== "outmoded_template")
                 return;
 

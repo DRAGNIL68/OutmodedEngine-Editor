@@ -74,6 +74,8 @@ import { VariantManager } from './features/variant/VariantManager.ts';
             Blockbench.removeListener('finish_edit', finishEdit);
             Blockbench.removeListener('update_selection', updateSelection);
         }
+
+        
     });
 
     
