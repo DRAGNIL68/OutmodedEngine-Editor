@@ -52,15 +52,13 @@ import { VariantManager } from './features/variant/VariantManager.ts';
             new Property(ModelProject, "string", "credit", {
                 condition: () => Format.id === "outmoded_template",
                 exposed: true, default: "Made with BlockBench", 
-                label: "Credit"})
+                label: "Credit"});
 
             new Property(ModelProject, "string", "namespacedId", {
                 condition: () => Format.id === "outmoded_template",
                 exposed: true, 
                 default: "", 
                 label: "NamespacedId (optional)"});
-
-
 
             console.log("loading outmoded editor");
             VariantManager.bindEvents();

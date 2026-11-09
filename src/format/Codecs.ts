@@ -1,6 +1,6 @@
 
     import { CodecUtils } from "../CodecUtils";
-import { VariantTools } from "../features/variant/VariantTools";
+    import { VariantTools } from "../features/variant/VariantTools";
 
 
     export const exportCodec = new Codec('outmoded_template_codec', {
@@ -27,7 +27,6 @@ import { VariantTools } from "../features/variant/VariantTools";
                         position: group.origin,
                         left_rotation: group.rotation,
                         translation:  group.origin,
-                        scale: [1,1,1] // temp
                     },
                     properties: {},
                     user_properties: {} // this stores user defined data

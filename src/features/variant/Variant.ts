@@ -1,3 +1,4 @@
+import { VariantManager } from "./VariantManager"
 
 export interface CubeUvMap {
     north: Texture | undefined | null | false
@@ -8,11 +9,13 @@ export interface CubeUvMap {
     down: Texture | undefined | null | false
 }
 
+
+
 export class Variant{
     public isDefault = false // this should never be true unless this is "default"
     public defaultMap = new Map<UUID, CubeUvMap>() // only for default variant
     
-    public textureMap = new Map<Texture, Texture>() // texture : texture
+    public textureMap = new Map<UUID, UUID>() // texture.uuid : texture.uuid
     public excludedGroupMap = new Set<UUID>;
     
     public getTextureMap(){
@@ -48,8 +51,6 @@ export class Variant{
                     up: cube.faces["up"].getTexture(),
                     down: cube.faces["down"].getTexture(),
             }
-
-
         })
     }
 
@@ -57,30 +58,26 @@ export class Variant{
     public apply(){
         Cube.all.forEach( (data, key) => {
 
-            let uvMap: CubeUvMap = {
-                north: data.faces["north"].getTexture(),
-                east: data.faces["east"].getTexture(),
-                south: data.faces["south"].getTexture(),
-                west: data.faces["west"].getTexture(),
-                up: data.faces["up"].getTexture(),
-                down: data.faces["down"].getTexture(),
-            }
-            let texture = data.faces["north"].getTexture()
+            let uvList: string[] = ["north", "east", "south", "west", "up", "down"]
 
-            if (texture instanceof Texture){
-                // apply texture 
-                texture.set
-                data.faces["north"].
-            }
+            uvList.forEach( i => {
 
-            
+                let texture = data.faces[i].texture
 
+                if (typeof texture === 'string') {
+
+                    if (!this.textureMap.has(texture))
+                        return;
+
+                    let parentGroup = data.parent;
+
+                    if (parentGroup instanceof Group) {
+                        //TODO: add when other stuff works
+                    }
+
+                    data.faces[i].texture = this.textureMap.get(texture);
+                }
+            })
         });
-
-
-        
-
-
-        
     }
 }
