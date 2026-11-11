@@ -2,15 +2,15 @@ import { mount, unmount } from 'svelte';
 import './app.css';
 import App from './App.svelte';
 
-
 import { finishEdit } from "./features/Hitbox.ts";
 import { initEdit } from "./features/Hitbox.ts";
 import { updateSelection } from "./features/Hitbox.ts";
 import { exportCodec } from "./format/Codecs.ts";
-import { VariantManager } from './features/variant/VariantManager.ts';
+import { VariantManager } from './features/variant/VariantManager.svelte.ts';
+
+import { customFormat } from "./format/ModelFormat.js"; // KEEP
 
 (function() {
-
 
     let action1 = new Action("export_outmoded_template", {
         name: "Export Outmoded Template",
@@ -24,7 +24,6 @@ import { VariantManager } from './features/variant/VariantManager.ts';
     })
     MenuBar.addAction(action1,'file.export');
 
-
         BBPlugin.register('bundle', {
         title: 'OutmodedEngine Editor',
         author: 'DRAGNIL68',
@@ -37,7 +36,7 @@ import { VariantManager } from './features/variant/VariantManager.ts';
 
         onload() {
             console.log("frog");
-
+            
             Language.addTranslations('en', {
                 'format_category.papermc': 'PaperMC',
                 'dialog.project.geoname': 'Namespaced Id'
@@ -56,13 +55,14 @@ import { VariantManager } from './features/variant/VariantManager.ts';
 
             new Property(ModelProject, "string", "namespacedId", {
                 condition: () => Format.id === "outmoded_template",
-                exposed: true, 
+                exposed: true,  
                 default: "", 
                 label: "NamespacedId (optional)"});
 
             console.log("loading outmoded editor");
+            
             VariantManager.bindEvents();
-
+            //openSvelteDialog1();
         },
 
 
@@ -74,11 +74,9 @@ import { VariantManager } from './features/variant/VariantManager.ts';
             Blockbench.removeListener('finish_edit', finishEdit);
             Blockbench.removeListener('update_selection', updateSelection);
         }
-
-        
     });
 
-    
+
     // Create and display the dialog
     function openSvelteDialog() {
         const container = document.createElement('div');

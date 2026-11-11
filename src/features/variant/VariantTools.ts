@@ -1,6 +1,6 @@
 import { CodecUtils } from "../../CodecUtils";
 import type { Variant } from "./Variant";
-import { VariantManager } from "./VariantManager";
+import { VariantManager } from "./VariantManager.svelte.ts";
 
 
 

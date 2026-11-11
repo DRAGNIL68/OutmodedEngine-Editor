@@ -1,4 +1,4 @@
-import { VariantManager } from "./VariantManager"
+import { VariantManager } from "./VariantManager.svelte"
 
 export interface CubeUvMap {
     north: Texture | undefined | null | false
