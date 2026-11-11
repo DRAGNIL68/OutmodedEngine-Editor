@@ -1,11 +1,22 @@
 <script lang="ts">
     import Button from "./VariantButton.svelte"
+  import { VariantHolder } from "./VariantHolder";
+  import { VariantManager } from "./VariantManager.svelte";
 
     
     let {variantList}: {variantList: string[]} = $props();
 
     function handleClick() {
-        // variant stuff
+        let holder: VariantHolder | undefined = VariantManager.getCurrentVariantHolder();
+        
+        if (holder === undefined)
+            return;
+        
+        console.log("frog");
+        
+        holder.addNewA();
+        VariantManager.generateVariantGui();
+
     }
 
 </script>

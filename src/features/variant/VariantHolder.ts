@@ -22,6 +22,18 @@ export class VariantHolder {
         return this.project;
     }
 
+    addNew(name: string){
+        this.variantMap.set(name, new Variant())
+    }
+
+    addNewA(){
+        if (this.variantMap.has(String(this.variantNum+1)))
+            return;
+
+        this.variantNum++;
+        this.variantMap.set(String(this.variantNum), new Variant())
+    }
+
     // applies the normal textures
     // 
     reset(){

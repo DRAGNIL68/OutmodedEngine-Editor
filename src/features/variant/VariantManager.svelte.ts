@@ -28,14 +28,16 @@ export class VariantManager{
             if (event.project.format.id !== "outmoded_template")
                 return;
 
-            let varinatHolder = this.variantHolderMap.get(event.project.uuid)
+            let varinatHolder = this.variantHolderMap.get(Project.uuid)
 
             if (varinatHolder === undefined){ // this is for new projects that are created
-                this.variantHolderMap.set(event.project.uuid, new VariantHolder(event.project.uuid));
-                console.log("Project "+event.project.uuid+" has been added to VariantManager")
+                varinatHolder = new VariantHolder(Project.uuid);
+                this.variantHolderMap.set(Project.uuid, varinatHolder);
+                console.log("Project "+Project.uuid+" has been added to VariantManager")
             }
-            
+
             this.currentVariantHolder = varinatHolder;
+            this.generateVariantGui();
             
         })
 
@@ -45,7 +47,6 @@ export class VariantManager{
         })
 
         VariantManager.openSvelteDialog1()
-
     }
 
     public static setCurrentVariant(id: string){
