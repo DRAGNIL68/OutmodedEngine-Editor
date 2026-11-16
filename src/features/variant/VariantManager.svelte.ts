@@ -1,6 +1,8 @@
 import { VariantHolder } from "./VariantHolder";
 import { mount, unmount } from 'svelte';
 import VariantPanel from "./VariantPanel.svelte";
+import VariantDialog from "./VariantDialog.svelte";
+import type { VariantOptionData } from "./VariantData";
 
 let list: string[] = $state([]); // used as a handy way to update variant gui
 
@@ -46,7 +48,7 @@ export class VariantManager{
             console.log("Project "+event.project.uuid+" has been removed to VariantManager")
         })
 
-        VariantManager.openSvelteDialog1()
+        VariantManager.initVariantPanel()
     }
 
     public static setCurrentVariant(id: string){
@@ -58,7 +60,7 @@ export class VariantManager{
         return this.currentVariantHolder;
     }
     
-    public static openSvelteDialog1() { 
+    public static initVariantPanel() { 
         console.log("added custom panel1")
         const container = document.createElement('div'); 
         let app: ReturnType<typeof mount> | undefined; 
@@ -86,6 +88,46 @@ export class VariantManager{
         }); 
         console.log("added custom panel")
         return myCustomPanel; 
+    }
+
+        // Create and display the dialog
+    public static openVariantDialog(dataList: VariantOptionData[]) {
+        const container = document.createElement('div');
+
+        let app: ReturnType<typeof mount> | undefined;
+        const dialog = new Dialog('outmoded_editor_dialog', {
+            title: 'OutmodedEngine Editor',
+            width: 700,
+            lines: [container],
+
+            onClose() {
+                if (app) {
+                    unmount(app);
+                    app = undefined;
+                }
+
+                return true;
+            },
+
+            onConfirm(formResult, event) {
+                
+
+
+                if (app) {
+                    unmount(app);
+                    app = undefined;
+                }
+            },
+        });
+
+        dialog.show();
+
+        app = mount(VariantDialog, {
+            target: container,
+            props: {variantData: dataList} 
+        });
+
+        return dialog;
     }
 
 }  

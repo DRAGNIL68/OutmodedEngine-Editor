@@ -1,6 +1,27 @@
 <script lang="ts">
+  import { VariantManager } from "./VariantManager.svelte";
+
 
     let {variant}: {variant: string} = $props();
+
+    function onEdit(){
+        VariantManager.openVariantDialog([]);
+    }
+
+    function onDelete(){
+        let holder = VariantManager.getCurrentVariantHolder();
+
+        if (holder === undefined)
+            return;
+
+        if (variant === "default"){
+            Blockbench.showQuickMessage('Cannot delete default variant', 500);
+            return
+        }
+
+        holder.variantMap.delete(variant);
+        VariantManager.generateVariantGui();
+    }
 
 </script>
 
@@ -9,9 +30,9 @@
         {variant}
     </h1>
     <div class="div_2">
-        <button class=text_right>edit</button>
+        <button class=text_right onclick={onEdit}>edit</button>
 
-        <button class=text_right>delete</button>
+        <button class=text_right onclick={onDelete}>delete</button>
     </div>
 
 </div>
