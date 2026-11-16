@@ -1,16 +1,23 @@
 import { VariantHolder } from "./VariantHolder";
 import { mount, unmount } from 'svelte';
 import VariantPanel from "./VariantPanel.svelte";
-import VariantDialog from "./VariantDialog.svelte";
-import type { VariantOptionData } from "./VariantData";
 
 let list: string[] = $state([]); // used as a handy way to update variant gui
 
 export class VariantManager{
-
+    //TODO: block user texture changes in variants
     private static variantHolderMap = new Map<string, VariantHolder>();
     private static currentVariantHolder: VariantHolder | undefined = undefined
     
+    public static nameToUuidMap = new Map<string, UUID>();
+
+
+    public static generateNameToUuidMap(){
+        this.nameToUuidMap.clear();
+        Texture.all.forEach( texture => {
+            this.nameToUuidMap.set(texture.name, texture.uuid);
+        })
+    }
 
 
     public static generateVariantGui(){
@@ -39,7 +46,9 @@ export class VariantManager{
             }
 
             this.currentVariantHolder = varinatHolder;
+            this.generateNameToUuidMap()
             this.generateVariantGui();
+            
             
         })
 
@@ -91,43 +100,4 @@ export class VariantManager{
     }
 
         // Create and display the dialog
-    public static openVariantDialog(dataList: VariantOptionData[]) {
-        const container = document.createElement('div');
-
-        let app: ReturnType<typeof mount> | undefined;
-        const dialog = new Dialog('outmoded_editor_dialog', {
-            title: 'OutmodedEngine Editor',
-            width: 700,
-            lines: [container],
-
-            onClose() {
-                if (app) {
-                    unmount(app);
-                    app = undefined;
-                }
-
-                return true;
-            },
-
-            onConfirm(formResult, event) {
-                
-
-
-                if (app) {
-                    unmount(app);
-                    app = undefined;
-                }
-            },
-        });
-
-        dialog.show();
-
-        app = mount(VariantDialog, {
-            target: container,
-            props: {variantData: dataList} 
-        });
-
-        return dialog;
-    }
-
 }  

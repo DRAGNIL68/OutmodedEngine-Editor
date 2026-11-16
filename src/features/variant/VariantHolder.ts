@@ -53,10 +53,8 @@ export class VariantHolder {
                 if (typeof texture !== 'string') 
                     return;
 
-                if (!defaultVariant.textureMap.has(texture))
-                    return;
-
-                data.faces[i].texture = defaultVariant.textureMap.get(texture);
+                
+                // data.faces[i].texture = defaultVariant.textureMap.get(texture);
 
             })
         });

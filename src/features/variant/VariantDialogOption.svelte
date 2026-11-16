@@ -5,12 +5,10 @@
 
   function input1Updated(newValue: string) {
     variantData.input1 = newValue;
-    console.log("Function called with:", newValue);
   }
 
   function input2Updated(newValue: string) {
     variantData.input2 = newValue;
-    console.log("Function called with:", newValue);
   }
 //I FUCKING HATE JAVASCRIPT 
 </script>

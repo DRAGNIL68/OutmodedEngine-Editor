@@ -1,11 +1,32 @@
 <script lang="ts">
+  import type { Variant } from "./Variant";
+  import { VariantDialogMaker } from "./VariantDialogMaker.svelte";
   import { VariantManager } from "./VariantManager.svelte";
 
 
     let {variant}: {variant: string} = $props();
 
     function onEdit(){
-        VariantManager.openVariantDialog([]);
+        
+
+        let holder = VariantManager.getCurrentVariantHolder();
+
+        if (holder === undefined){
+            return;
+        }
+            
+        if (variant === "default"){
+            Blockbench.showQuickMessage('Cannot delete default variant', 500);
+            return
+        }
+
+        let variantClass: Variant | undefined = holder.variantMap.get(variant);
+
+        if (variantClass === undefined){
+            return
+        }
+
+        new VariantDialogMaker().openVariantDialog(variantClass);
     }
 
     function onDelete(){

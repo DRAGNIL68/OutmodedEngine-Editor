@@ -1,3 +1,4 @@
+import type { VariantOptionData } from "./VariantData"
 import { VariantManager } from "./VariantManager.svelte"
 
 export interface CubeUvMap {
@@ -15,7 +16,7 @@ export class Variant{
     public isDefault = false // this should never be true unless this is "default"
     public defaultMap = new Map<UUID, CubeUvMap>() // only for default variant
     
-    public textureMap = new Map<UUID, UUID>() // texture.uuid : texture.uuid
+    public textureMap: VariantOptionData[] = [] // texture.uuid : texture.uuid
     public excludedGroupMap = new Set<UUID>;
     
     public getTextureMap(){
@@ -66,16 +67,23 @@ export class Variant{
 
                 if (typeof texture === 'string') {
 
-                    if (!this.textureMap.has(texture))
-                        return;
+                    this.textureMap.forEach( textureData => {
 
-                    let parentGroup = data.parent;
+                        let parentGroup = data.parent;
 
-                    if (parentGroup instanceof Group) {
-                        //TODO: add when other stuff works
-                    }
+                        if (parentGroup instanceof Group) {
+                            //TODO: add when other stuff works
+                        }
+                        
+                        if (textureData.input1 === texture){
 
-                    data.faces[i].texture = this.textureMap.get(texture);
+                            if (!VariantManager.nameToUuidMap.has(texture)){
+                                return
+                            }
+                            
+                            data.faces[i].texture = VariantManager.nameToUuidMap.get(texture);
+                        }
+                    })
                 }
             })
         });
