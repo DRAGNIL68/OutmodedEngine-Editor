@@ -7,7 +7,7 @@ import VariantDialog from "./VariantDialog.svelte";
 // but if i dont it breaks the reactive state of "variantList"
 export class VariantDialogMaker {
     public openVariantDialog(variant: Variant) {
-        let variantList = $state<VariantOptionData[]>([...variant.textureMap]);
+        
 
         const container = document.createElement('div');
         let app: ReturnType<typeof mount> | undefined;
@@ -24,17 +24,7 @@ export class VariantDialogMaker {
                 return true;
             },
             onConfirm() {
-                variant.textureMap.length = 0;
 
-                variantList.forEach(data => {
-                    if (data.input1.length === 0 || !data.input1.endsWith(".png")) {
-                        return;
-                    }
-                    if (data.input2.length === 0 || !data.input2.endsWith(".png")) {
-                        return;
-                    }
-                    variant.textureMap.push(data);
-                });
 
                 if (app) {
                     unmount(app);
@@ -47,14 +37,6 @@ export class VariantDialogMaker {
 
         app = mount(VariantDialog, {
             target: container,
-            props: {
-                get variantData() {
-                    return variantList;
-                },
-                set variantData(value) {
-                    variantList = value;
-                }
-            }
         });
 
         return dialog;

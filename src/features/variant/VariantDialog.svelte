@@ -1,25 +1,8 @@
 <script lang="ts">
-  import VariantDialogOption from "./VariantDialogOption.svelte";
-  import type { VariantOptionData } from "./VariantData";
-
-    let {variantData = $bindable()}: {variantData: VariantOptionData[]} = $props(); 
-
-    function add(){
-        console.log("frog")
-        let test: VariantOptionData = {input1: "example.png", input2: "new_example.png"}
-        variantData.push(test);
-    }
-
 </script>
 
 <div class="div">
-    <div>
-        <button onclick={add}>add</button>
-    </div>
     <div class="div_2">        
-        {#each variantData as data}
-            <VariantDialogOption variantData={data}></VariantDialogOption>
-        {/each}
     </div>
 </div>
 

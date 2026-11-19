@@ -1,7 +1,7 @@
 <script lang="ts">
     import Button from "./VariantButton.svelte"
-  import { VariantHolder } from "./VariantHolder";
-  import { VariantManager } from "./VariantManager.svelte";
+    import { VariantHolder } from "./VariantHolder.svelte.ts";
+    import { VariantManager } from "./VariantManager.svelte";
 
     
     let {variantList}: {variantList: string[]} = $props();

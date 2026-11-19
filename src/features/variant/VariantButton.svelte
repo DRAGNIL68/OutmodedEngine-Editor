@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Variant } from "./Variant";
-  import { VariantDialogMaker } from "./VariantDialogMaker.svelte";
   import { VariantManager } from "./VariantManager.svelte";
 
 
@@ -15,18 +14,18 @@
             return;
         }
             
-        if (variant === "default"){
-            Blockbench.showQuickMessage('Cannot delete default variant', 500);
-            return
-        }
-
         let variantClass: Variant | undefined = holder.variantMap.get(variant);
 
         if (variantClass === undefined){
             return
         }
-
-        new VariantDialogMaker().openVariantDialog(variantClass);
+        
+        holder.variantMap.get("default")?.apply();
+        variantClass.apply();
+        holder.currentVariant = variant;
+        VariantManager.generateVariantGui();
+        // new VariantDialogMaker().openVariantDialog(variantClass);
+        
     }
 
     function onDelete(){
@@ -47,11 +46,11 @@
 </script>
 
 <div class="div">
-    <h1 class=text>
+    <h1 class=text style:color={VariantManager.getCurrentVariantHolder()?.currentVariant === variant  ? "yellow" : "white"}>
         {variant}
     </h1>
     <div class="div_2">
-        <button class=text_right onclick={onEdit}>edit</button>
+        <button class=text_right onclick={onEdit}>select</button>
 
         <button class=text_right onclick={onDelete}>delete</button>
     </div>
@@ -79,7 +78,6 @@
     .text { 
         font: 2em sans-serif; 
         line-height: 0.4;
-        color: white;
         
     }
     .text_right { 

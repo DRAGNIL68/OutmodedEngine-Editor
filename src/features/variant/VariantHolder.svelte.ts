@@ -3,17 +3,17 @@ import { Variant } from "./Variant";
 export class VariantHolder {
     private project: UUID;
     public variantNum = 0;
-    public currentVariant: string = "default"
+    currentVariant = $state<string>("default");
 
     public variantMap = new Map<string, Variant>();
 
     constructor(project: UUID){
         this.project = project;
 
-        let variant = new Variant()
+        let variant = new Variant(true);
 
 
-        this.variantMap.set("default", variant)
+        this.variantMap.set("default", variant);
 
     }
 
@@ -23,7 +23,7 @@ export class VariantHolder {
     }
 
     addNew(name: string){
-        this.variantMap.set(name, new Variant())
+        this.variantMap.set(name, new Variant(false))
     }
 
     addNewA(){
@@ -31,7 +31,7 @@ export class VariantHolder {
             return;
 
         this.variantNum++;
-        this.variantMap.set(String(this.variantNum), new Variant())
+        this.variantMap.set(String(this.variantNum), new Variant(false))
     }
 
     // applies the normal textures

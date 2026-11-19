@@ -1,6 +1,7 @@
-import { VariantHolder } from "./VariantHolder";
+import { VariantHolder } from "./VariantHolder.svelte.ts";
 import { mount, unmount } from 'svelte';
 import VariantPanel from "./VariantPanel.svelte";
+import { Variant, type CubeUvMap } from "./Variant";
 
 let list: string[] = $state([]); // used as a handy way to update variant gui
 
@@ -47,9 +48,7 @@ export class VariantManager{
 
             this.currentVariantHolder = varinatHolder;
             this.generateNameToUuidMap()
-            this.generateVariantGui();
-            
-            
+            this.generateVariantGui(); 
         })
 
         Blockbench.on("close_project", event => {
@@ -57,7 +56,83 @@ export class VariantManager{
             console.log("Project "+event.project.uuid+" has been removed to VariantManager")
         })
 
+        Blockbench.on("finish_edit", event => { // add
+            
+            let variant: Variant | undefined = this.currentVariantHolder?.variantMap.get(this.currentVariantHolder?.currentVariant);
+
+            if (variant === undefined){
+                return;
+            }
+
+            event.aspects.elements?.forEach( element => {
+
+                if (!(element instanceof Cube)){
+                    return;
+                }
+
+                let uvMap: CubeUvMap = {
+                    north: element.faces["north"].texture,
+                    east: element.faces["east"].texture,
+                    south: element.faces["south"].texture,
+                    west: element.faces["west"].texture,
+                    up: element.faces["up"].texture,
+                    down: element.faces["down"].texture,
+                }
+
+                variant.defaultMap.set(element.uuid, uvMap);
+            })
+
+            console.log("something has been finish_edit");
+            this.checkCubes("add");
+        })
+
+        Blockbench.on("undo", event => { // remove
+            console.log("something has been undo");
+            this.checkCubes("remove");
+        })
+
+        Blockbench.on("redo", event => { // add
+            console.log("something has been redo");
+            this.checkCubes("add");
+        })
+
         VariantManager.initVariantPanel()
+
+        
+    }
+
+    // adds new cubes to the default variant
+    private static checkCubes(flag: string){
+        let variant: Variant | undefined = this.currentVariantHolder?.variantMap.get("default")
+
+        if (variant === undefined){
+            return; // error
+        }
+        
+        Cube.all.forEach( cube => {
+            if (flag === "add"){
+                console.log("cube update")
+                if (variant.defaultMap.has(cube.uuid)){
+                    return
+                }
+
+                let uvMap: CubeUvMap = {
+                    north: cube.faces["north"].texture,
+                    east: cube.faces["east"].texture,
+                    south: cube.faces["south"].texture,
+                    west: cube.faces["west"].texture,
+                    up: cube.faces["up"].texture,
+                    down: cube.faces["down"].texture,
+                }
+
+                variant.defaultMap.set(cube.uuid, uvMap)
+                console.log("added new cube")
+            }
+            else if (flag === "remove") {
+                variant.defaultMap.delete(cube.uuid)
+                console.log("removed new cube")
+            }
+        })
     }
 
     public static setCurrentVariant(id: string){
@@ -67,7 +142,7 @@ export class VariantManager{
     // this may be undefined
     public static getCurrentVariantHolder(): VariantHolder | undefined {
         return this.currentVariantHolder;
-    }
+    } 
     
     public static initVariantPanel() { 
         console.log("added custom panel1")

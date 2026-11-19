@@ -1,13 +1,14 @@
 import type { VariantOptionData } from "./VariantData"
+import type { VariantHolder } from "./VariantHolder.svelte"
 import { VariantManager } from "./VariantManager.svelte"
 
 export interface CubeUvMap {
-    north: Texture | undefined | null | false
-    east: Texture | undefined | null | false
-    south: Texture | undefined | null | false
-    west: Texture | undefined | null | false
-    up: Texture | undefined | null | false
-    down: Texture | undefined | null | false
+    north: string | false | undefined
+    east: string  | false | undefined
+    south: string | false | undefined
+    west: string | false | undefined
+    up: string | false | undefined
+    down: string | false | undefined
 }
 
 
@@ -16,12 +17,42 @@ export class Variant{
     public isDefault = false // this should never be true unless this is "default"
     public defaultMap = new Map<UUID, CubeUvMap>() // only for default variant
     
-    public textureMap: VariantOptionData[] = [] // texture.uuid : texture.uuid
+
     public excludedGroupMap = new Set<UUID>;
     
-    public getTextureMap(){
-        return this.textureMap;
+    constructor(isDefault: boolean) {
+
+        if (!isDefault) {
+            let variantHolder: VariantHolder | undefined = VariantManager.getCurrentVariantHolder();
+
+            if (variantHolder === undefined){
+                return; // error
+            }
+
+            let variant: Variant | undefined = variantHolder.variantMap.get("default");
+
+            if (variant === undefined){
+                return; // error
+            }
+
+            variant.defaultMap.forEach( (uvMap, uuid) => {
+
+                let newUvMap: CubeUvMap = {
+                    north: uvMap.north,
+                    east: uvMap.east,
+                    south: uvMap.south,
+                    west: uvMap.west,
+                    up: uvMap.up,
+                    down: uvMap.down,
+                }
+
+                this.defaultMap.set(uuid, newUvMap)
+            })
+
+        }
+        // if its default there will be no cubes when its created
     }
+
     
     public getExcludedGroupMap(): Set<UUID>{
         return this.excludedGroupMap
@@ -35,57 +66,36 @@ export class Variant{
 
     }
 
-    // NEVER USED.
-    // dont know why i made it
-    public generateCubeUvMap(){
-
-        if (this.isDefault === false)
-            console.warn("non default variant generated CubeUvMap")
-
-        Cube.all.forEach((cube) => {
-
-            let uvMap: CubeUvMap = {
-                    north: cube.faces["north"].getTexture(),
-                    east: cube.faces["east"].getTexture(),
-                    south: cube.faces["south"].getTexture(),
-                    west: cube.faces["west"].getTexture(),
-                    up: cube.faces["up"].getTexture(),
-                    down: cube.faces["down"].getTexture(),
-            }
-        })
-    }
 
     // applies the variant
     public apply(){
-        Cube.all.forEach( (data, key) => {
 
-            let uvList: string[] = ["north", "east", "south", "west", "up", "down"]
+        Cube.all.forEach( (cube) => {
+            
+            let uvmap: CubeUvMap | undefined = this.defaultMap.get(cube.uuid);
 
-            uvList.forEach( i => {
+            if (uvmap === undefined) {
+                return; // if it does not exist dont run it
+            }
 
-                let texture = data.faces[i].texture
+            cube.faces["north"].texture = uvmap.north,
+            cube.faces["east"].texture = uvmap.east,
+            cube.faces["south"].texture = uvmap.south,
+            cube.faces["west"].texture = uvmap.west,
+            cube.faces["up"].texture = uvmap.up,
+            cube.faces["down"].texture = uvmap.down
+            console.log("applied")
+        });
 
-                if (typeof texture === 'string') {
 
-                    this.textureMap.forEach( textureData => {
-
-                        let parentGroup = data.parent;
-
-                        if (parentGroup instanceof Group) {
-                            //TODO: add when other stuff works
-                        }
-                        
-                        if (textureData.input1 === texture){
-
-                            if (!VariantManager.nameToUuidMap.has(texture)){
-                                return
-                            }
-                            
-                            data.faces[i].texture = VariantManager.nameToUuidMap.get(texture);
-                        }
-                    })
-                }
-            })
+        Canvas.updateView({
+            elements: Cube.all,
+            element_aspects: {
+                faces: true,
+                uv: true,
+                geometry: true
+            }
         });
     }
+
 }
