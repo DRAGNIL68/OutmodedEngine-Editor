@@ -34,16 +34,33 @@ export class VariantManager{
         if (Project.format.id !== "outmoded_template")
             return "";
 
+
     }
 
     public static saveVariants(): string {
         if (Project.format.id !== "outmoded_template")
             return "";
+
+        let list: any[] = []
+
+        this.currentVariantHolder?.variantMap.forEach((variant, key) => {
+            list.push({
+                name: key,
+                uvMap: Object.fromEntries(variant.defaultMap)
+            })
+        })
+
         
-        return "";
+        return JSON.stringify(list, null, 4);
     }
 
     public static bindEvents(){
+
+        Blockbench.on("save_project", event => {
+            if (Project.format.id !== "outmoded_template")
+                return;
+            Project.variants_json = this.saveVariants()
+        });
         Blockbench.on("select_project", event => {
             
             if (event.project.format.id !== "outmoded_template")
@@ -71,7 +88,6 @@ export class VariantManager{
         })
 
         Blockbench.on("finish_edit", event => { // add
-            
             let variant: Variant | undefined = this.currentVariantHolder?.variantMap.get(this.currentVariantHolder?.currentVariant);
 
             if (variant === undefined){
@@ -104,7 +120,8 @@ export class VariantManager{
         Blockbench.on("undo", event => { // remove
             console.log("something has been undo");
             this.checkCubes("remove");
-            this.generateUuidToNameMap()
+            this.generateUuidToNameMap();
+            this.saveVariants();
         })
 
         Blockbench.on("redo", event => { // add
@@ -113,9 +130,7 @@ export class VariantManager{
             this.generateUuidToNameMap()
         })
 
-        VariantManager.initVariantPanel()
-
-        
+        VariantManager.initVariantPanel();
     }
 
     // adds new cubes to the default variant
@@ -180,7 +195,6 @@ export class VariantManager{
         }); 
 
         this.generateVariantGui();
-
         myCustomPanel.node.appendChild(container);
         // Add the missing props property here
         app = mount(VariantPanel, { 
