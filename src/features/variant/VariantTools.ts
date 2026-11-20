@@ -1,5 +1,5 @@
 import { CodecUtils } from "../../CodecUtils";
-import type { Variant } from "./Variant";
+import { Variant, type CubeUvMap } from "./Variant";
 import { VariantManager } from "./VariantManager.svelte.ts";
 
 
@@ -8,71 +8,6 @@ import { VariantManager } from "./VariantManager.svelte.ts";
 export const VariantTools = class VariantTools {
     static namespace: string = "outmoded_engine"
 
-    public static generateVariantData(variantId: string, textureMap: any){
-
-        let variant = {
-            name: variantId, // name/id of variant
-            textureMap: textureMap, // stores what textures map to what
-            rp_data: {}
-        }
-
-        let groupCubeMap: Map<UUID, Cube[]> = CodecUtils.groupFlatten();
-        let resourceMap = new Map<UUID, any>();
-        
-        groupCubeMap.forEach((cubes, key) => {
-            resourceMap.set(key, VariantTools.generateGroupFile(cubes)) // maps group uuid as file name to model data
-        });
-
-        variant.rp_data = Object.fromEntries(resourceMap);
-
-        return variant;
-    }
-
-    public static generateGroupFile(cubes: Cube[]){
-        let textureMap = new Map<string, any>() // id : texture name
-
-        let file = {
-            format_version: "1.21.11",
-            texture_size: [-1, -1],
-            textures: {}, // map
-            elements: [] as any[] // I think this is bad
-            
-        }
-
-        cubes.forEach(cube => {
-            if (cube == null){
-                return;
-            }
-                    
-            let faces = new Map<string, any>();
-
-            for (const [face, data] of Object.entries(cube.faces)) {
-
-                let txt: false | Texture | null | undefined = data.getTexture();
-
-                if (txt instanceof Texture){             
-                    textureMap.set(txt.id, VariantTools.namespace+":"+txt.name);
-
-                    faces.set(face, {
-                        uv: data.uv,
-                        texture: "#"+txt.id
-                    })
-                }
-            }
-
-            let cubeData = {
-                from: [cube.from[0], cube.from[1], cube.from[2]],
-                to: [cube.to[0], cube.to[1], cube.to[2]],
-                rotation: {"x": cube.rotation[0], "y": cube.rotation[1], "z": cube.rotation[2], "origin": [cube.origin[0], cube.origin[1], cube.origin[2]]},
-                faces: Object.fromEntries(faces)
-            }
-            
-            file.textures = Object.fromEntries(textureMap);
-            file.elements.push(cubeData);   
-        })
-
-        return file;
-    }
 
     public static generateAllVariants(): Map<string, any> {
         // DO NOT CHANGE DATA YOU WILL BREAK THINGS.
@@ -93,21 +28,17 @@ export const VariantTools = class VariantTools {
     }
 
     public static generateVariantResource(variantId: string): Map<UUID, any> {
-
         let variant: Variant | undefined = VariantManager.getCurrentVariantHolder()?.variantMap.get(variantId)
 
         if (variant == undefined)
             return new Map<UUID, any>();
 
-        
         let groupCubeMap: Map<UUID, Cube[]> = CodecUtils.groupFlatten();
-        let textureToTextureMap: Map<string, string> = variant.getTextureMap()
-
         let resourceMap = new Map<UUID, any>();
 
         groupCubeMap.forEach((cubes, key) => {
-
-            let textureMap = new Map<string, any>() // id : texture name
+            let num = 0;
+            let textureMap = new Map<string, string>() // id : texture name
 
             let file = {
                 format_version: "1.21.11",
@@ -126,26 +57,55 @@ export const VariantTools = class VariantTools {
                     
                 let faces = new Map<string, any>();
 
-                for (const [face, data] of Object.entries(cube.faces)) {
+                let uvMap = variant.defaultMap.get(cube.uuid);
 
-                    let txt: false | Texture | null | undefined = data.getTexture();
+                if (uvMap === undefined) {
+                    return;
+                }
+                
+                // this is very lazy
 
-                    if (txt instanceof Texture){           
+                let facesList: (keyof CubeUvMap)[] = ['north', 'east', 'south', 'west', 'up', 'down']
+                
+                facesList.forEach( i => {
+                    if (typeof uvMap[i] === "string"){           
                         
-                        let textName: string = txt.name;
+                        let textName: string | undefined = VariantManager.uuidToNameMap.get(uvMap[i]);
 
-                        if (textureToTextureMap.has(txt.name)){ // replaces the default texture with a new and shiny one from a variant
-                            textName = textureToTextureMap.get(txt.name) ?? "UNDEFINED" // if for some reason the variant texture is null replace with a string
+                        if (textName !== undefined){
+                            textureMap.set(textName, num.toString())
+                            num++;
                         }
+                    }
+                });
 
-                        textureMap.set(txt.id, textName);
 
-                        faces.set(face, {
-                            uv: data.uv,
-                            texture: "#"+txt.id
+                for (const [face, data] of Object.entries(cube.faces)) {
+                    let txt: false | Texture | null | undefined = data.getTexture();
+                }
+                
+                console.log(textureMap)
+
+                
+                facesList.forEach( i => {
+                    const uuid = uvMap[i];
+
+                    
+
+                    if (typeof uuid === "string"){
+                        let texName = VariantManager.uuidToNameMap.get(uuid);
+
+                        if (texName === undefined)
+                            return;
+
+                        faces.set(i, {
+                            uv: cube.faces[i].uv,
+                            texture: typeof uvMap.north === "string" ? "#"+textureMap.get(texName) : "ERROR"
                         })
                     }
-                }
+                });
+
+                
 
                 let cubeData = {
                     from: [cube.from[0], cube.from[1], cube.from[2]],
@@ -154,10 +114,15 @@ export const VariantTools = class VariantTools {
                     faces: Object.fromEntries(faces)
                 }
                 
-                file.textures = Object.fromEntries(textureMap);
+                
+                let invertedTextureMap = new Map<string, string>() // id : texture name
+
+                textureMap.forEach( (data, key) => {
+                    invertedTextureMap.set(data, key);
+                })
+
+                file.textures = Object.fromEntries(invertedTextureMap);
                 file.data.elements.push(cubeData);
-                
-                
             })
 
             resourceMap.set(key, file) // maps group uuid as file name to model data
@@ -178,4 +143,5 @@ export const VariantTools = class VariantTools {
 
         return result;
     }
+
 }

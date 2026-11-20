@@ -10,13 +10,12 @@ export class VariantManager{
     private static variantHolderMap = new Map<string, VariantHolder>();
     private static currentVariantHolder: VariantHolder | undefined = undefined
     
-    public static nameToUuidMap = new Map<string, UUID>();
+    public static uuidToNameMap = new Map<string, UUID>();
 
-
-    public static generateNameToUuidMap(){
-        this.nameToUuidMap.clear();
+    public static generateUuidToNameMap(){
+        this.uuidToNameMap.clear();
         Texture.all.forEach( texture => {
-            this.nameToUuidMap.set(texture.name, texture.uuid);
+            this.uuidToNameMap.set(texture.uuid, texture.name);
         })
     }
 
@@ -31,6 +30,18 @@ export class VariantManager{
         });
 
     }
+    public static loadVariants(){
+        if (Project.format.id !== "outmoded_template")
+            return "";
+
+    }
+
+    public static saveVariants(): string {
+        if (Project.format.id !== "outmoded_template")
+            return "";
+        
+        return "";
+    }
 
     public static bindEvents(){
         Blockbench.on("select_project", event => {
@@ -43,11 +54,14 @@ export class VariantManager{
             if (varinatHolder === undefined){ // this is for new projects that are created
                 varinatHolder = new VariantHolder(Project.uuid);
                 this.variantHolderMap.set(Project.uuid, varinatHolder);
+
+                this.loadVariants(); // loads variants fro, json
+
                 console.log("Project "+Project.uuid+" has been added to VariantManager")
             }
 
             this.currentVariantHolder = varinatHolder;
-            this.generateNameToUuidMap()
+            this.generateUuidToNameMap()
             this.generateVariantGui(); 
         })
 
@@ -84,16 +98,19 @@ export class VariantManager{
 
             console.log("something has been finish_edit");
             this.checkCubes("add");
+            this.generateUuidToNameMap()
         })
 
         Blockbench.on("undo", event => { // remove
             console.log("something has been undo");
             this.checkCubes("remove");
+            this.generateUuidToNameMap()
         })
 
         Blockbench.on("redo", event => { // add
             console.log("something has been redo");
             this.checkCubes("add");
+            this.generateUuidToNameMap()
         })
 
         VariantManager.initVariantPanel()

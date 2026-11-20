@@ -35,7 +35,7 @@ import { customFormat } from "./format/ModelFormat.js"; // KEEP
         tags: ['Minecraft', 'OutmodedEngine'], // Max 3 tags
 
         onload() {
-            console.log("frog");
+            console.log("Outmoded Editor Loading");
             
             Language.addTranslations('en', {
                 'format_category.papermc': 'PaperMC',
@@ -59,7 +59,14 @@ import { customFormat } from "./format/ModelFormat.js"; // KEEP
                 default: "", 
                 label: "NamespacedId (optional)"});
 
-            console.log("loading outmoded editor");
+            new Property(ModelProject, "string", "variants_json", {
+                condition: () => Format.id === "outmoded_template",
+                exposed: true,  
+                default: "FUCK"
+            });
+            
+            
+
             
             VariantManager.bindEvents();
             //openSvelteDialog1();

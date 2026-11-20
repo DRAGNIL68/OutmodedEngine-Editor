@@ -22,7 +22,6 @@ export const CodecUtils = class CodecUtils {
             }
 
             cubeMap.set(pr.uuid, cubes);
-
         });
 
         return cubeMap;
